@@ -27,9 +27,9 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	bootstrapv1alpha3 "github.com/mrajashree/etcdadm-bootstrap-provider/api/v1alpha3"
-	bootstrapv1beta1 "github.com/mrajashree/etcdadm-bootstrap-provider/api/v1beta1"
-	"github.com/mrajashree/etcdadm-bootstrap-provider/controllers"
+	bootstrapv1alpha3 "github.com/aws/etcdadm-bootstrap-provider/api/v1alpha3"
+	bootstrapv1beta1 "github.com/aws/etcdadm-bootstrap-provider/api/v1beta1"
+	"github.com/aws/etcdadm-bootstrap-provider/controllers"
 	// +kubebuilder:scaffold:imports
 )
 

@@ -17,8 +17,8 @@ limitations under the License.
 package cloudinit
 
 import (
-	etcdbootstrapv1 "github.com/mrajashree/etcdadm-bootstrap-provider/api/v1beta1"
-	"github.com/mrajashree/etcdadm-bootstrap-provider/pkg/userdata"
+	etcdbootstrapv1 "github.com/aws/etcdadm-bootstrap-provider/api/v1beta1"
+	"github.com/aws/etcdadm-bootstrap-provider/pkg/userdata"
 	"github.com/pkg/errors"
 )
 
