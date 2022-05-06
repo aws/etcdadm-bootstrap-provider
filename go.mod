@@ -1,4 +1,4 @@
-module github.com/mrajashree/etcdadm-bootstrap-provider
+module github.com/aws/etcdadm-bootstrap-provider
 
 go 1.16
 

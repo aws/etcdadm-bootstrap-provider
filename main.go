@@ -20,8 +20,8 @@ import (
 	"flag"
 	"os"
 
-	bootstrapv1alpha3 "github.com/mrajashree/etcdadm-bootstrap-provider/api/v1alpha3"
-	"github.com/mrajashree/etcdadm-bootstrap-provider/controllers"
+	bootstrapv1alpha3 "github.com/aws/etcdadm-bootstrap-provider/api/v1alpha3"
+	"github.com/aws/etcdadm-bootstrap-provider/controllers"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
