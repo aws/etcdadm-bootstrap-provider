@@ -3,9 +3,9 @@ package bottlerocket
 import (
 	"fmt"
 
+	bootstrapv1alpha3 "github.com/aws/etcdadm-bootstrap-provider/api/v1alpha3"
+	"github.com/aws/etcdadm-bootstrap-provider/pkg/userdata"
 	"github.com/go-logr/logr"
-	bootstrapv1alpha3 "github.com/mrajashree/etcdadm-bootstrap-provider/api/v1alpha3"
-	"github.com/mrajashree/etcdadm-bootstrap-provider/pkg/userdata"
 )
 
 const etcdInitCloudInit = `{{.Header}}

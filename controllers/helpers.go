@@ -3,7 +3,7 @@ package controllers
 import (
 	"context"
 
-	bootstrapv1alpha3 "github.com/mrajashree/etcdadm-bootstrap-provider/api/v1alpha3"
+	bootstrapv1alpha3 "github.com/aws/etcdadm-bootstrap-provider/api/v1alpha3"
 	"github.com/pkg/errors"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha3"
 	ctrl "sigs.k8s.io/controller-runtime"
