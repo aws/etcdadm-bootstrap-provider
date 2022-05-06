@@ -1,4 +1,4 @@
-module github.com/mrajashree/etcdadm-bootstrap-provider/hack/tools
+module github.com/aws/etcdadm-bootstrap-provider/hack/tools
 
 go 1.16
 
@@ -9,7 +9,6 @@ require (
 	github.com/golangci/golangci-lint v1.27.0
 	github.com/joelanford/go-apidiff v0.0.0-20191206194835-106bcff5f060
 	github.com/onsi/ginkgo v1.16.4
-	github.com/raviqqe/liche v0.0.0-20200229003944-f57a5d1c5be4
 	github.com/sergi/go-diff v1.1.0 // indirect
 	golang.org/x/tools v0.1.5
 	k8s.io/code-generator v0.22.2

@@ -1,4 +1,4 @@
-module github.com/mrajashree/etcdadm-bootstrap-provider
+module github.com/aws/etcdadm-bootstrap-provider
 
 go 1.16
 
@@ -11,7 +11,7 @@ require (
 	k8s.io/apimachinery v0.23.0
 	k8s.io/client-go v0.23.0
 	k8s.io/utils v0.0.0-20210930125809-cb0fa318a74b
-	sigs.k8s.io/cluster-api v1.0.1
+	sigs.k8s.io/cluster-api v1.1.3
 	sigs.k8s.io/controller-runtime v0.11.1
 )
 

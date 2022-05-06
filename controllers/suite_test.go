@@ -20,7 +20,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	bootstrapv1beta1 "github.com/mrajashree/etcdadm-bootstrap-provider/api/v1beta1"
+	bootstrapv1beta1 "github.com/aws/etcdadm-bootstrap-provider/api/v1beta1"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"k8s.io/client-go/kubernetes/scheme"
