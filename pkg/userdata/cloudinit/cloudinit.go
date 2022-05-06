@@ -6,8 +6,8 @@ import (
 	"strings"
 	"text/template"
 
-	etcdbootstrapv1 "github.com/mrajashree/etcdadm-bootstrap-provider/api/v1beta1"
-	"github.com/mrajashree/etcdadm-bootstrap-provider/pkg/userdata"
+	etcdbootstrapv1 "github.com/aws/etcdadm-bootstrap-provider/api/v1beta1"
+	"github.com/aws/etcdadm-bootstrap-provider/pkg/userdata"
 	"github.com/pkg/errors"
 	capbk "sigs.k8s.io/cluster-api/bootstrap/kubeadm/api/v1beta1"
 )

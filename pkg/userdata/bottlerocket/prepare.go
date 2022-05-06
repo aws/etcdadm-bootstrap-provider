@@ -4,9 +4,9 @@ import (
 	"path/filepath"
 	"strings"
 
+	etcdbootstrapv1 "github.com/aws/etcdadm-bootstrap-provider/api/v1beta1"
+	"github.com/aws/etcdadm-bootstrap-provider/pkg/userdata"
 	"github.com/go-logr/logr"
-	etcdbootstrapv1 "github.com/mrajashree/etcdadm-bootstrap-provider/api/v1beta1"
-	"github.com/mrajashree/etcdadm-bootstrap-provider/pkg/userdata"
 )
 
 const (
