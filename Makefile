@@ -21,7 +21,7 @@ CONVERSION_GEN := $(abspath $(TOOLS_BIN_DIR)/conversion-gen)
 export PATH := $(abspath $(TOOLS_BIN_DIR)):$(PATH)
 
 # Set --output-base for conversion-gen if we are not within GOPATH
-ifneq ($(abspath $(ROOT_DIR)),$(shell go env GOPATH)/src/github.com/mrajashree/etcdadm-bootstrap-provider)
+ifneq ($(abspath $(ROOT_DIR)),$(shell go env GOPATH)/src/github.com/aws/etcdadm-bootstrap-provider)
 	CONVERSION_GEN_OUTPUT_BASE := --output-base=$(ROOT_DIR)
 else
 	export GOPATH := $(shell go env GOPATH)
