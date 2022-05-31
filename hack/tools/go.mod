@@ -11,6 +11,7 @@ require (
 	github.com/onsi/ginkgo v1.16.4
 	github.com/sergi/go-diff v1.1.0 // indirect
 	golang.org/x/tools v0.1.6-0.20210820212750-d4cc65f0b2ff
+	gopkg.in/yaml.v3 v3.0.0 // indirect
 	k8s.io/code-generator v0.23.1
 	sigs.k8s.io/controller-tools v0.7.0
 	sigs.k8s.io/kubebuilder/docs/book/utils v0.0.0-20210702145813-742983631190
