@@ -14,12 +14,36 @@ import (
 )
 
 const (
-	adminContainerInitTemplate = `{{ define "adminContainerInitSettings" -}}
-[settings.host-containers.admin]
+	hostContainersTemplate = `{{ define "hostContainersSettings" -}}
+{{- range .HostContainers }}
+[settings.host-containers.{{ .Name }}]
 enabled = true
-user-data = "{{.AdminContainerUserData}}"
-{{- end -}}
+superpowered = {{ .Superpowered }}
+{{- if .Image }}
+source = "{{ .Image }}"
+{{- end }}
+{{- if .UserData }}
+user-data = "{{ .UserData }}"
+{{- end }}
+{{- end }}
+{{- end }}
 `
+
+	bootstrapContainersTemplate = `{{ define "bootstrapContainersSettings" -}}
+{{- range .BootstrapContainers }}
+[settings.bootstrap-containers.{{ .Name }}]
+essential = {{ .Essential }}
+mode = "{{ .Mode }}"
+{{- if .Image }}
+source = "{{ .Image }}"
+{{- end }}
+{{- if .UserData }}
+user-data = "{{ .UserData }}"
+{{- end }}
+{{- end }}
+{{- end }}
+`
+
 	kubernetesInitTemplate = `{{ define "kubernetesInitSettings" -}}
 [settings.kubernetes]
 cluster-domain = "cluster.local"
@@ -27,14 +51,6 @@ standalone-mode = true
 authentication-mode = "tls"
 server-tls-bootstrap = false
 pod-infra-container-image = "{{.PauseContainerSource}}"
-{{- end -}}
-`
-	bootstrapHostContainerTemplate = `{{define "bootstrapHostContainerSettings" -}}
-[settings.host-containers.kubeadm-bootstrap]
-enabled = true
-superpowered = true
-source = "{{.BootstrapContainerSource}}"
-user-data = "{{.BootstrapContainerUserData}}"
 {{- end -}}
 `
 
@@ -55,11 +71,13 @@ data = "{{.RegistryMirrorCACert}}"
 trusted=true
 {{- end -}}
 `
-	bottlerocketNodeInitSettingsTemplate = `{{template "bootstrapHostContainerSettings" .}}
-
-{{template "adminContainerInitSettings" .}}
+	bottlerocketNodeInitSettingsTemplate = `{{template "hostContainersSettings" .}}
 
 {{template "kubernetesInitSettings" .}}
+
+{{- if .BootstrapContainers }}
+{{template "bootstrapContainersSettings" .}}
+{{- end -}}
 
 {{- if (ne .HTTPSProxyEndpoint "")}}
 {{template "networkInitSettings" .}}
@@ -76,25 +94,19 @@ trusted=true
 )
 
 type bottlerocketSettingsInput struct {
-	BootstrapContainerUserData string
-	AdminContainerUserData     string
-	BootstrapContainerSource   string
-	PauseContainerSource       string
-	HTTPSProxyEndpoint         string
-	NoProxyEndpoints           []string
-	RegistryMirrorEndpoint     string
-	RegistryMirrorCACert       string
-}
-
-type hostPath struct {
-	Path string
-	Type string
+	PauseContainerSource   string
+	HTTPSProxyEndpoint     string
+	NoProxyEndpoints       []string
+	RegistryMirrorEndpoint string
+	RegistryMirrorCACert   string
+	HostContainers         []etcdbootstrapv1.BottlerocketHostContainer
+	BootstrapContainers    []etcdbootstrapv1.BottlerocketBootstrapContainer
 }
 
 // generateBottlerocketNodeUserData returns the userdata for the host bottlerocket in toml format
-func generateBottlerocketNodeUserData(bootstrapContainerUserData []byte, users []bootstrapv1.User, config etcdbootstrapv1.EtcdadmConfigSpec, log logr.Logger) ([]byte, error) {
-	// base64 encode the bootstrapContainer's user data
-	b64BootstrapContainerUserData := base64.StdEncoding.EncodeToString(bootstrapContainerUserData)
+func generateBottlerocketNodeUserData(kubeadmBootstrapContainerUserData []byte, users []bootstrapv1.User, config etcdbootstrapv1.EtcdadmConfigSpec, log logr.Logger) ([]byte, error) {
+	// base64 encode the kubeadm bootstrapContainer's user data
+	b64KubeadmBootstrapContainerUserData := base64.StdEncoding.EncodeToString(kubeadmBootstrapContainerUserData)
 
 	// Parse out all the ssh authorized keys
 	sshAuthorizedKeys := getAllAuthorizedKeys(users)
@@ -106,11 +118,33 @@ func generateBottlerocketNodeUserData(bootstrapContainerUserData []byte, users [
 	}
 	b64AdminContainerUserData := base64.StdEncoding.EncodeToString(adminContainerUserData)
 
+	hostContainers := []etcdbootstrapv1.BottlerocketHostContainer{
+		{
+			Name:         "admin",
+			Superpowered: true,
+			Image:        config.BottlerocketConfig.AdminImage,
+			UserData:     b64AdminContainerUserData,
+		},
+		{
+			Name:         "kubeadm-bootstrap",
+			Superpowered: true,
+			Image:        config.BottlerocketConfig.BootstrapImage,
+			UserData:     b64KubeadmBootstrapContainerUserData,
+		},
+	}
+
+	if config.BottlerocketConfig.ControlImage != "" {
+		hostContainers = append(hostContainers, etcdbootstrapv1.BottlerocketHostContainer{
+			Name:         "control",
+			Superpowered: false,
+			Image:        config.BottlerocketConfig.ControlImage,
+		})
+	}
+
 	bottlerocketInput := &bottlerocketSettingsInput{
-		BootstrapContainerUserData: b64BootstrapContainerUserData,
-		AdminContainerUserData:     b64AdminContainerUserData,
-		BootstrapContainerSource:   config.BottlerocketConfig.BootstrapImage,
-		PauseContainerSource:       config.BottlerocketConfig.PauseImage,
+		PauseContainerSource: config.BottlerocketConfig.PauseImage,
+		HostContainers:       hostContainers,
+		BootstrapContainers:  config.BottlerocketConfig.CustomBootstrapContainers,
 	}
 
 	if config.Proxy != nil {
@@ -167,11 +201,11 @@ func generateAdminContainerUserData(kind string, tpl string, data interface{}) (
 
 func generateNodeUserData(kind string, tpl string, data interface{}) ([]byte, error) {
 	tm := template.New(kind).Funcs(template.FuncMap{"stringsJoin": strings.Join})
-	if _, err := tm.Parse(bootstrapHostContainerTemplate); err != nil {
-		return nil, errors.Wrapf(err, "failed to parse hostContainer %s template", kind)
+	if _, err := tm.Parse(hostContainersTemplate); err != nil {
+		return nil, errors.Wrapf(err, "failed to parse hostContainers %s template", kind)
 	}
-	if _, err := tm.Parse(adminContainerInitTemplate); err != nil {
-		return nil, errors.Wrapf(err, "failed to parse adminContainer %s template", kind)
+	if _, err := tm.Parse(bootstrapContainersTemplate); err != nil {
+		return nil, errors.Wrapf(err, "failed to parse bootstrapContainers %s template", kind)
 	}
 	if _, err := tm.Parse(kubernetesInitTemplate); err != nil {
 		return nil, errors.Wrapf(err, "failed to parse kubernetes %s template", kind)

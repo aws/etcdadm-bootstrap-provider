@@ -1,8 +1,10 @@
 package v1alpha3
 
 import (
-	etcdv1beta1 "github.com/aws/etcdadm-bootstrap-provider/api/v1beta1"
+	apiconversion "k8s.io/apimachinery/pkg/conversion"
 	"sigs.k8s.io/controller-runtime/pkg/conversion"
+
+	etcdv1beta1 "github.com/aws/etcdadm-bootstrap-provider/api/v1beta1"
 )
 
 // ConvertTo converts this EtcdadmConfig to the Hub version (v1beta1).
@@ -33,4 +35,8 @@ func (src *EtcdadmConfigList) ConvertTo(dstRaw conversion.Hub) error { // nolint
 func (dst *EtcdadmConfigList) ConvertFrom(srcRaw conversion.Hub) error { // nolint
 	src := srcRaw.(*etcdv1beta1.EtcdadmConfigList)
 	return Convert_v1beta1_EtcdadmConfigList_To_v1alpha3_EtcdadmConfigList(src, dst, nil)
+}
+
+func Convert_v1beta1_BottlerocketConfig_To_v1alpha3_BottlerocketConfig(in *etcdv1beta1.BottlerocketConfig, out *BottlerocketConfig, s apiconversion.Scope) error {
+	return autoConvert_v1beta1_BottlerocketConfig_To_v1alpha3_BottlerocketConfig(in, out, s)
 }

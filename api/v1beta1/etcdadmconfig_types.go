@@ -97,8 +97,64 @@ type BottlerocketConfig struct {
 	// BootstrapImage specifies the container image to use for bottlerocket's bootstrapping
 	BootstrapImage string `json:"bootstrapImage"`
 
+	// AdminImage specifies the admin container image to use for bottlerocket.
+	AdminImage string `json:"adminImage"`
+
+	// ControlImage specifies the control container image to use for bottlerocket.
+	ControlImage string `json:"controlImage"`
+
 	// PauseImage specifies the image to use for the pause container
 	PauseImage string `json:"pauseImage"`
+
+	// CustomHostContainers adds additional host containers for bottlerocket.
+	// +optional
+	CustomHostContainers []BottlerocketHostContainer `json:"customHostContainers,omitempty"`
+
+	// CustomBootstrapContainers adds additional bootstrap containers for bottlerocket.
+	// +optional
+	CustomBootstrapContainers []BottlerocketBootstrapContainer `json:"customBootstrapContainers,omitempty"`
+}
+
+// BottlerocketHostContainer holds the host container setting for bottlerocket.
+type BottlerocketHostContainer struct {
+	// Name is the host container name that will be given to the container in BR's `apiserver`
+	// +kubebuilder:validation:Required
+	Name string `json:"name"`
+
+	// Superpowered indicates if the container will be superpowered
+	// +kubebuilder:validation:Required
+	Superpowered bool `json:"superpowered"`
+
+	// Image is the actual location of the host container image.
+	Image string `json:"image"`
+
+	// UserData is the userdata that will be attached to the image.
+	// +optional
+	UserData string `json:"userData,omitempty"`
+}
+
+// BottlerocketBootstrapContainer holds the bootstrap container setting for bottlerocket.
+type BottlerocketBootstrapContainer struct {
+	// Name is the bootstrap container name that will be given to the container in BR's `apiserver`.
+	// +kubebuilder:validation:Required
+	Name string `json:"name"`
+
+	// Image is the actual image used for Bottlerocket bootstrap.
+	Image string `json:"image"`
+
+	// Essential decides whether or not the container should fail the boot process.
+	// Bootstrap containers configured with essential = true will stop the boot process if they exit code is a non-zero value.
+	// Default is false.
+	// +optional
+	Essential bool `json:"essential"`
+
+	// Mode represents the bootstrap container mode.
+	// +kubebuilder:validation:Enum=always;off;once
+	Mode string `json:"mode"`
+
+	// UserData is the base64-encoded userdata.
+	// +optional
+	UserData string `json:"userData,omitempty"`
 }
 
 type CloudInitConfig struct {
