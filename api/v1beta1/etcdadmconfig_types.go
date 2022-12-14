@@ -98,10 +98,12 @@ type BottlerocketConfig struct {
 	BootstrapImage string `json:"bootstrapImage"`
 
 	// AdminImage specifies the admin container image to use for bottlerocket.
-	AdminImage string `json:"adminImage"`
+	// +optional
+	AdminImage string `json:"adminImage,omitempty"`
 
 	// ControlImage specifies the control container image to use for bottlerocket.
-	ControlImage string `json:"controlImage"`
+	// +optional
+	ControlImage string `json:"controlImage,omitempty"`
 
 	// PauseImage specifies the image to use for the pause container
 	PauseImage string `json:"pauseImage"`
