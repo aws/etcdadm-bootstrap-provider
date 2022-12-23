@@ -234,7 +234,8 @@ func (r *EtcdadmConfigReconciler) initializeEtcd(ctx context.Context, scope *Sco
 
 	initInput := userdata.EtcdPlaneInput{
 		BaseUserData: userdata.BaseUserData{
-			Users: scope.Config.Spec.Users,
+			Users:              scope.Config.Spec.Users,
+			PreEtcdadmCommands: scope.Config.Spec.PreEtcdadmCommands,
 		},
 		Certificates: CACertKeyPair,
 	}
@@ -242,9 +243,9 @@ func (r *EtcdadmConfigReconciler) initializeEtcd(ctx context.Context, scope *Sco
 	// only do this if etcdadm not baked in image
 	if !scope.Config.Spec.EtcdadmBuiltin {
 		if len(scope.Config.Spec.EtcdadmInstallCommands) > 0 {
-			initInput.PreEtcdadmCommands = append(scope.Config.Spec.PreEtcdadmCommands, scope.Config.Spec.EtcdadmInstallCommands...)
+			initInput.PreEtcdadmCommands = append(initInput.PreEtcdadmCommands, scope.Config.Spec.EtcdadmInstallCommands...)
 		} else {
-			initInput.PreEtcdadmCommands = append(scope.Config.Spec.PreEtcdadmCommands, defaultEtcdadmInstallCommands...)
+			initInput.PreEtcdadmCommands = append(initInput.PreEtcdadmCommands, defaultEtcdadmInstallCommands...)
 		}
 	}
 
@@ -304,7 +305,8 @@ func (r *EtcdadmConfigReconciler) joinEtcd(ctx context.Context, scope *Scope) (_
 
 	joinInput := userdata.EtcdPlaneJoinInput{
 		BaseUserData: userdata.BaseUserData{
-			Users: scope.Config.Spec.Users,
+			Users:              scope.Config.Spec.Users,
+			PreEtcdadmCommands: scope.Config.Spec.PreEtcdadmCommands,
 		},
 		JoinAddress:  joinAddress,
 		Certificates: etcdCerts,
@@ -312,9 +314,9 @@ func (r *EtcdadmConfigReconciler) joinEtcd(ctx context.Context, scope *Scope) (_
 
 	if !scope.Config.Spec.EtcdadmBuiltin {
 		if len(scope.Config.Spec.EtcdadmInstallCommands) > 0 {
-			joinInput.PreEtcdadmCommands = append(scope.Config.Spec.PreEtcdadmCommands, scope.Config.Spec.EtcdadmInstallCommands...)
+			joinInput.PreEtcdadmCommands = append(joinInput.PreEtcdadmCommands, scope.Config.Spec.EtcdadmInstallCommands...)
 		} else {
-			joinInput.PreEtcdadmCommands = append(scope.Config.Spec.PreEtcdadmCommands, defaultEtcdadmInstallCommands...)
+			joinInput.PreEtcdadmCommands = append(joinInput.PreEtcdadmCommands, defaultEtcdadmInstallCommands...)
 		}
 	}
 
