@@ -71,6 +71,17 @@ data = "{{.RegistryMirrorCACert}}"
 trusted=true
 {{- end -}}
 `
+	registryMirrorCredentialsTemplate = `{{ define "registryMirrorCredentialsSettings" -}}
+[[settings.container-registry.credentials]]
+registry = "public.ecr.aws"
+username = "{{.RegistryMirrorUsername}}"
+password = "{{.RegistryMirrorPassword}}"
+[[settings.container-registry.credentials]]
+registry = "{{.RegistryMirrorEndpoint}}"
+username = "{{.RegistryMirrorUsername}}"
+password = "{{.RegistryMirrorPassword}}"
+{{- end -}}
+`
 	bottlerocketNodeInitSettingsTemplate = `{{template "hostContainersSettings" .}}
 
 {{template "kubernetesInitSettings" .}}
@@ -90,6 +101,10 @@ trusted=true
 {{- if (ne .RegistryMirrorCACert "")}}
 {{template "registryMirrorCACertSettings" .}}
 {{- end -}}
+
+{{- if and (ne .RegistryMirrorUsername "") (ne .RegistryMirrorPassword "")}}
+{{template "registryMirrorCredentialsSettings" .}}
+{{- end -}}
 `
 )
 
@@ -99,6 +114,8 @@ type bottlerocketSettingsInput struct {
 	NoProxyEndpoints       []string
 	RegistryMirrorEndpoint string
 	RegistryMirrorCACert   string
+	RegistryMirrorUsername string
+	RegistryMirrorPassword string
 	HostContainers         []etcdbootstrapv1.BottlerocketHostContainer
 	BootstrapContainers    []etcdbootstrapv1.BottlerocketBootstrapContainer
 }
@@ -159,6 +176,10 @@ func generateBottlerocketNodeUserData(kubeadmBootstrapContainerUserData []byte, 
 		if config.RegistryMirror.CACert != "" {
 			bottlerocketInput.RegistryMirrorCACert = base64.StdEncoding.EncodeToString([]byte(config.RegistryMirror.CACert))
 		}
+		if config.RegistryMirror.Username != "" && config.RegistryMirror.Password != "" {
+			bottlerocketInput.RegistryMirrorUsername = config.RegistryMirror.Username
+			bottlerocketInput.RegistryMirrorPassword = config.RegistryMirror.Password
+		}
 	}
 
 	bottlerocketNodeUserData, err := generateNodeUserData("InitBottlerocketNode", bottlerocketNodeInitSettingsTemplate, bottlerocketInput)
@@ -218,6 +239,9 @@ func generateNodeUserData(kind string, tpl string, data interface{}) ([]byte, er
 	}
 	if _, err := tm.Parse(registryMirrorCACertTemplate); err != nil {
 		return nil, errors.Wrapf(err, "failed to parse registry mirror ca cert %s template", kind)
+	}
+	if _, err := tm.Parse(registryMirrorCredentialsTemplate); err != nil {
+		return nil, errors.Wrapf(err, "failed to parse registry mirror credentials %s template", kind)
 	}
 
 	t, err := tm.Parse(tpl)
