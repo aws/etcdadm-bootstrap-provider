@@ -40,6 +40,7 @@ type BaseUserData struct {
 	Mounts              []bootstrapv1.MountPoints
 	ControlPlane        bool
 	SentinelFileCommand string
+	RegistryMirrorCredentials
 }
 
 type EtcdadmArgs struct {
@@ -48,6 +49,11 @@ type EtcdadmArgs struct {
 	EtcdReleaseURL  string
 	InstallDir      string
 	CipherSuites    string
+}
+
+type RegistryMirrorCredentials struct {
+	Username string
+	Password string
 }
 
 func (args *EtcdadmArgs) SystemdFlags() []string {

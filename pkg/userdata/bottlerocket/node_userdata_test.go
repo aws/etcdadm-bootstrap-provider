@@ -9,6 +9,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/aws/etcdadm-bootstrap-provider/api/v1beta1"
+	"github.com/aws/etcdadm-bootstrap-provider/pkg/userdata"
 )
 
 const userDataMinimum = `
@@ -105,6 +106,37 @@ mode = "once"
 source = "custom-bootstrap-image-2"
 user-data = "xyz"`
 
+const userDataWithRegistryAuth = `
+[settings.host-containers.admin]
+enabled = true
+superpowered = true
+user-data = "CnsKCSJzc2giOiB7CgkJImF1dGhvcml6ZWQta2V5cyI6IFsic3NoLWtleSJdCgl9Cn0="
+[settings.host-containers.kubeadm-bootstrap]
+enabled = true
+superpowered = true
+source = "kubeadm-bootstrap-image"
+user-data = "a3ViZWFkbUJvb3RzdHJhcFVzZXJEYXRh"
+
+[settings.kubernetes]
+cluster-domain = "cluster.local"
+standalone-mode = true
+authentication-mode = "tls"
+server-tls-bootstrap = false
+pod-infra-container-image = "pause-image"
+[settings.container-registry.mirrors]
+"public.ecr.aws" = ["https://registry-endpoint"]
+[settings.pki.registry-mirror-ca]
+data = "Y2FjZXJ0"
+trusted=true
+[[settings.container-registry.credentials]]
+registry = "public.ecr.aws"
+username = "username"
+password = "password"
+[[settings.container-registry.credentials]]
+registry = "registry-endpoint"
+username = "username"
+password = "password"`
+
 func TestGenerateBottlerocketNodeUserData(t *testing.T) {
 	g := NewWithT(t)
 
@@ -112,6 +144,7 @@ func TestGenerateBottlerocketNodeUserData(t *testing.T) {
 		name                     string
 		kubeadmBootstrapUserData string
 		users                    []bootstrapv1.User
+		registryCredentials      userdata.RegistryMirrorCredentials
 		etcdConfig               v1beta1.EtcdadmConfigSpec
 		output                   string
 	}{
@@ -217,10 +250,36 @@ func TestGenerateBottlerocketNodeUserData(t *testing.T) {
 			},
 			output: userDataWithProxyRegistryBootstrapContainers,
 		},
+		{
+			name:                     "with registry with authentication",
+			kubeadmBootstrapUserData: "kubeadmBootstrapUserData",
+			users: []bootstrapv1.User{
+				{
+					SSHAuthorizedKeys: []string{
+						"ssh-key",
+					},
+				},
+			},
+			registryCredentials: userdata.RegistryMirrorCredentials{
+				Username: "username",
+				Password: "password",
+			},
+			etcdConfig: v1beta1.EtcdadmConfigSpec{
+				BottlerocketConfig: &v1beta1.BottlerocketConfig{
+					BootstrapImage: "kubeadm-bootstrap-image",
+					PauseImage:     "pause-image",
+				},
+				RegistryMirror: &v1beta1.RegistryMirrorConfiguration{
+					Endpoint: "registry-endpoint",
+					CACert:   "cacert",
+				},
+			},
+			output: userDataWithRegistryAuth,
+		},
 	}
 	for _, testcase := range testcases {
 		t.Run(testcase.name, func(t *testing.T) {
-			b, err := generateBottlerocketNodeUserData([]byte(testcase.kubeadmBootstrapUserData), testcase.users, testcase.etcdConfig, logr.New(log.NullLogSink{}))
+			b, err := generateBottlerocketNodeUserData([]byte(testcase.kubeadmBootstrapUserData), testcase.users, testcase.registryCredentials, testcase.etcdConfig, logr.New(log.NullLogSink{}))
 			g.Expect(err).NotTo(HaveOccurred())
 			g.Expect(string(b)).To(Equal(testcase.output))
 		})

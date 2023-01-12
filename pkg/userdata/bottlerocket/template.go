@@ -29,7 +29,7 @@ func generateUserData(kind string, tpl string, data interface{}, input *userdata
 		return nil, err
 	}
 
-	return generateBottlerocketNodeUserData(bootstrapContainerUserData, input.Users, config, log)
+	return generateBottlerocketNodeUserData(bootstrapContainerUserData, input.Users, input.RegistryMirrorCredentials, config, log)
 }
 
 func generateBootstrapContainerUserData(kind string, tpl string, data interface{}) ([]byte, error) {
