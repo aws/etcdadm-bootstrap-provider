@@ -8,6 +8,7 @@ import (
 	"text/template"
 
 	etcdbootstrapv1 "github.com/aws/etcdadm-bootstrap-provider/api/v1beta1"
+	"github.com/aws/etcdadm-bootstrap-provider/pkg/userdata"
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
 	bootstrapv1 "sigs.k8s.io/cluster-api/bootstrap/kubeadm/api/v1beta1"
@@ -71,6 +72,17 @@ data = "{{.RegistryMirrorCACert}}"
 trusted=true
 {{- end -}}
 `
+	registryMirrorCredentialsTemplate = `{{ define "registryMirrorCredentialsSettings" -}}
+[[settings.container-registry.credentials]]
+registry = "public.ecr.aws"
+username = "{{.RegistryMirrorUsername}}"
+password = "{{.RegistryMirrorPassword}}"
+[[settings.container-registry.credentials]]
+registry = "{{.RegistryMirrorEndpoint}}"
+username = "{{.RegistryMirrorUsername}}"
+password = "{{.RegistryMirrorPassword}}"
+{{- end -}}
+`
 	bottlerocketNodeInitSettingsTemplate = `{{template "hostContainersSettings" .}}
 
 {{template "kubernetesInitSettings" .}}
@@ -90,6 +102,10 @@ trusted=true
 {{- if (ne .RegistryMirrorCACert "")}}
 {{template "registryMirrorCACertSettings" .}}
 {{- end -}}
+
+{{- if and (ne .RegistryMirrorUsername "") (ne .RegistryMirrorPassword "")}}
+{{template "registryMirrorCredentialsSettings" .}}
+{{- end -}}
 `
 )
 
@@ -99,12 +115,14 @@ type bottlerocketSettingsInput struct {
 	NoProxyEndpoints       []string
 	RegistryMirrorEndpoint string
 	RegistryMirrorCACert   string
+	RegistryMirrorUsername string
+	RegistryMirrorPassword string
 	HostContainers         []etcdbootstrapv1.BottlerocketHostContainer
 	BootstrapContainers    []etcdbootstrapv1.BottlerocketBootstrapContainer
 }
 
 // generateBottlerocketNodeUserData returns the userdata for the host bottlerocket in toml format
-func generateBottlerocketNodeUserData(kubeadmBootstrapContainerUserData []byte, users []bootstrapv1.User, config etcdbootstrapv1.EtcdadmConfigSpec, log logr.Logger) ([]byte, error) {
+func generateBottlerocketNodeUserData(kubeadmBootstrapContainerUserData []byte, users []bootstrapv1.User, registryMirrorCredentials userdata.RegistryMirrorCredentials, config etcdbootstrapv1.EtcdadmConfigSpec, log logr.Logger) ([]byte, error) {
 	// base64 encode the kubeadm bootstrapContainer's user data
 	b64KubeadmBootstrapContainerUserData := base64.StdEncoding.EncodeToString(kubeadmBootstrapContainerUserData)
 
@@ -159,6 +177,8 @@ func generateBottlerocketNodeUserData(kubeadmBootstrapContainerUserData []byte, 
 		if config.RegistryMirror.CACert != "" {
 			bottlerocketInput.RegistryMirrorCACert = base64.StdEncoding.EncodeToString([]byte(config.RegistryMirror.CACert))
 		}
+		bottlerocketInput.RegistryMirrorUsername = registryMirrorCredentials.Username
+		bottlerocketInput.RegistryMirrorPassword = registryMirrorCredentials.Password
 	}
 
 	bottlerocketNodeUserData, err := generateNodeUserData("InitBottlerocketNode", bottlerocketNodeInitSettingsTemplate, bottlerocketInput)
@@ -218,6 +238,9 @@ func generateNodeUserData(kind string, tpl string, data interface{}) ([]byte, er
 	}
 	if _, err := tm.Parse(registryMirrorCACertTemplate); err != nil {
 		return nil, errors.Wrapf(err, "failed to parse registry mirror ca cert %s template", kind)
+	}
+	if _, err := tm.Parse(registryMirrorCredentialsTemplate); err != nil {
+		return nil, errors.Wrapf(err, "failed to parse registry mirror credentials %s template", kind)
 	}
 
 	t, err := tm.Parse(tpl)

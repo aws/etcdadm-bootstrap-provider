@@ -19,6 +19,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"k8s.io/apimachinery/pkg/types"
 	"path/filepath"
 	"time"
 
@@ -49,6 +50,9 @@ import (
 )
 
 const stopKubeletCommand = "systemctl stop kubelet"
+const registrySecretName = "registry-credentials"
+const registryUsernameKey = "username"
+const registryPasswordKey = "password"
 
 // InitLocker is a lock that is used around etcdadm init
 type InitLocker interface {
@@ -240,6 +244,17 @@ func (r *EtcdadmConfigReconciler) initializeEtcd(ctx context.Context, scope *Sco
 		Certificates: CACertKeyPair,
 	}
 
+	// grab user pass for registry mirror
+	if &scope.Config.Spec.RegistryMirror != nil {
+		username, password, err := r.resolveRegistryCredentials(ctx, scope.Config)
+		if err != nil {
+			log.Info("Cannot find secret for registry credentials, proceeding without registry credentials")
+		} else {
+			initInput.RegistryMirrorCredentials.Username = string(username)
+			initInput.RegistryMirrorCredentials.Password = string(password)
+		}
+	}
+
 	// only do this if etcdadm not baked in image
 	if !scope.Config.Spec.EtcdadmBuiltin {
 		if len(scope.Config.Spec.EtcdadmInstallCommands) > 0 {
@@ -310,6 +325,17 @@ func (r *EtcdadmConfigReconciler) joinEtcd(ctx context.Context, scope *Scope) (_
 		},
 		JoinAddress:  joinAddress,
 		Certificates: etcdCerts,
+	}
+
+	// grab user pass for registry mirror
+	if &scope.Config.Spec.RegistryMirror != nil {
+		username, password, err := r.resolveRegistryCredentials(ctx, scope.Config)
+		if err != nil {
+			log.Info("Cannot find secret for registry credentials, proceeding without registry credentials")
+		} else {
+			joinInput.RegistryMirrorCredentials.Username = string(username)
+			joinInput.RegistryMirrorCredentials.Password = string(password)
+		}
 	}
 
 	if !scope.Config.Spec.EtcdadmBuiltin {
@@ -398,4 +424,24 @@ func (r *EtcdadmConfigReconciler) storeBootstrapData(ctx context.Context, config
 	config.Status.Ready = true
 	conditions.MarkTrue(config, bootstrapv1.DataSecretAvailableCondition)
 	return nil
+}
+
+func (r *EtcdadmConfigReconciler) resolveRegistryCredentials(ctx context.Context, config *etcdbootstrapv1.EtcdadmConfig) ([]byte, []byte, error) {
+	secret := &corev1.Secret{}
+	key := types.NamespacedName{Namespace: config.Namespace, Name: registrySecretName}
+	if err := r.Client.Get(ctx, key, secret); err != nil {
+		if apierrors.IsNotFound(err) {
+			return nil, nil, errors.Wrapf(err, "secret not found: %s", key)
+		}
+		return nil, nil, errors.Wrapf(err, "failed to retrieve Secret %q", key)
+	}
+	username, ok := secret.Data[registryUsernameKey]
+	if !ok {
+		return nil, nil, errors.Errorf("secret references non-existent secret key: %q", "username")
+	}
+	password, ok := secret.Data[registryPasswordKey]
+	if !ok {
+		return nil, nil, errors.Errorf("secret references non-existent secret key: %q", "password")
+	}
+	return username, password, nil
 }
