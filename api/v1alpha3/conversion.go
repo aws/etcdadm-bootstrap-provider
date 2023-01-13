@@ -40,8 +40,3 @@ func (dst *EtcdadmConfigList) ConvertFrom(srcRaw conversion.Hub) error { // noli
 func Convert_v1beta1_BottlerocketConfig_To_v1alpha3_BottlerocketConfig(in *etcdv1beta1.BottlerocketConfig, out *BottlerocketConfig, s apiconversion.Scope) error {
 	return autoConvert_v1beta1_BottlerocketConfig_To_v1alpha3_BottlerocketConfig(in, out, s)
 }
-
-func Convert_v1beta1_RegistryMirrorConfiguration_To_v1alpha3_RegistryMirrorConfiguration(in *etcdv1beta1.RegistryMirrorConfiguration, out *RegistryMirrorConfiguration, s apiconversion.Scope) error {
-	// RegistryMirror.Username and RegistryMirror.Password does not exist in v1alpha4
-	return autoConvert_v1beta1_RegistryMirrorConfiguration_To_v1alpha3_RegistryMirrorConfiguration(in, out, s)
-}

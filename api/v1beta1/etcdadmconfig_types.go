@@ -191,14 +191,6 @@ type RegistryMirrorConfiguration struct {
 
 	// CACert defines the CA cert for the registry mirror
 	CACert string `json:"caCert,omitempty"`
-
-	// Username defines the username for the registry mirror
-	// +optional
-	Username string `json:"username,omitempty"`
-
-	// Password defines the password for the registry mirror
-	// +optional
-	Password string `json:"password,omitempty"`
 }
 
 // EtcdadmConfigStatus defines the observed state of EtcdadmConfig
