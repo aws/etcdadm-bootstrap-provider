@@ -83,6 +83,10 @@ username = "{{.RegistryMirrorUsername}}"
 password = "{{.RegistryMirrorPassword}}"
 {{- end -}}
 `
+	ntpTemplate = `{{ define "ntpSettings" -}}
+[settings.ntp]
+time-servers = [{{stringsJoin .NTPServers ", " }}]
+{{- end -}}`
 	bottlerocketNodeInitSettingsTemplate = `{{template "hostContainersSettings" .}}
 
 {{template "kubernetesInitSettings" .}}
@@ -106,6 +110,10 @@ password = "{{.RegistryMirrorPassword}}"
 {{- if and (ne .RegistryMirrorUsername "") (ne .RegistryMirrorPassword "")}}
 {{template "registryMirrorCredentialsSettings" .}}
 {{- end -}}
+
+{{- if .NTPServers}}
+{{template "ntpSettings" .}}
+{{- end -}}
 `
 )
 
@@ -119,6 +127,7 @@ type bottlerocketSettingsInput struct {
 	RegistryMirrorPassword string
 	HostContainers         []etcdbootstrapv1.BottlerocketHostContainer
 	BootstrapContainers    []etcdbootstrapv1.BottlerocketBootstrapContainer
+	NTPServers             []string
 }
 
 // generateBottlerocketNodeUserData returns the userdata for the host bottlerocket in toml format
@@ -181,6 +190,12 @@ func generateBottlerocketNodeUserData(kubeadmBootstrapContainerUserData []byte, 
 		bottlerocketInput.RegistryMirrorPassword = registryMirrorCredentials.Password
 	}
 
+	if config.NTP != nil && config.NTP.Enabled != nil && *config.NTP.Enabled {
+		for _, ntpServer := range config.NTP.Servers {
+			bottlerocketInput.NTPServers = append(bottlerocketInput.NTPServers, strconv.Quote(ntpServer))
+		}
+	}
+
 	bottlerocketNodeUserData, err := generateNodeUserData("InitBottlerocketNode", bottlerocketNodeInitSettingsTemplate, bottlerocketInput)
 	if err != nil {
 		return nil, err
@@ -241,6 +256,9 @@ func generateNodeUserData(kind string, tpl string, data interface{}) ([]byte, er
 	}
 	if _, err := tm.Parse(registryMirrorCredentialsTemplate); err != nil {
 		return nil, errors.Wrapf(err, "failed to parse registry mirror credentials %s template", kind)
+	}
+	if _, err := tm.Parse(ntpTemplate); err != nil {
+		return nil, errors.Wrapf(err, "failed to parse NTP %s template", kind)
 	}
 
 	t, err := tm.Parse(tpl)

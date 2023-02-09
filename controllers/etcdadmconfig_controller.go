@@ -19,9 +19,10 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"k8s.io/apimachinery/pkg/types"
 	"path/filepath"
 	"time"
+
+	"k8s.io/apimachinery/pkg/types"
 
 	etcdbootstrapv1 "github.com/aws/etcdadm-bootstrap-provider/api/v1beta1"
 	"github.com/aws/etcdadm-bootstrap-provider/internal/locking"
@@ -240,12 +241,13 @@ func (r *EtcdadmConfigReconciler) initializeEtcd(ctx context.Context, scope *Sco
 		BaseUserData: userdata.BaseUserData{
 			Users:              scope.Config.Spec.Users,
 			PreEtcdadmCommands: scope.Config.Spec.PreEtcdadmCommands,
+			NTP:                scope.Config.Spec.NTP,
 		},
 		Certificates: CACertKeyPair,
 	}
 
 	// grab user pass for registry mirror
-	if &scope.Config.Spec.RegistryMirror != nil {
+	if scope.Config.Spec.RegistryMirror != nil {
 		username, password, err := r.resolveRegistryCredentials(ctx, scope.Config)
 		if err != nil {
 			log.Info("Cannot find secret for registry credentials, proceeding without registry credentials")
@@ -322,13 +324,14 @@ func (r *EtcdadmConfigReconciler) joinEtcd(ctx context.Context, scope *Scope) (_
 		BaseUserData: userdata.BaseUserData{
 			Users:              scope.Config.Spec.Users,
 			PreEtcdadmCommands: scope.Config.Spec.PreEtcdadmCommands,
+			NTP:                scope.Config.Spec.NTP,
 		},
 		JoinAddress:  joinAddress,
 		Certificates: etcdCerts,
 	}
 
 	// grab user pass for registry mirror
-	if &scope.Config.Spec.RegistryMirror != nil {
+	if scope.Config.Spec.RegistryMirror != nil {
 		username, password, err := r.resolveRegistryCredentials(ctx, scope.Config)
 		if err != nil {
 			log.Info("Cannot find secret for registry credentials, proceeding without registry credentials")

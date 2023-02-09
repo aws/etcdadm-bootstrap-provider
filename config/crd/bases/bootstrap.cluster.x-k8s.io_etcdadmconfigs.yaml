@@ -437,6 +437,10 @@ spec:
                   description: File defines the input for generating write_files in
                     cloud-init.
                   properties:
+                    append:
+                      description: Append specifies whether to append Content to existing
+                        file if Path exists.
+                      type: boolean
                     content:
                       description: Content is the actual content of the file.
                       type: string
@@ -492,6 +496,18 @@ spec:
                 - cloud-config
                 - bottlerocket
                 type: string
+              ntp:
+                description: NTP specifies NTP configuration
+                properties:
+                  enabled:
+                    description: Enabled specifies whether NTP should be enabled
+                    type: boolean
+                  servers:
+                    description: Servers specifies which NTP servers to use
+                    items:
+                      type: string
+                    type: array
+                type: object
               postEtcdadmCommands:
                 description: PostEtcdadmCommands specifies extra commands to run after
                   kubeadm runs
@@ -562,6 +578,29 @@ spec:
                     passwd:
                       description: Passwd specifies a hashed password for the user
                       type: string
+                    passwdFrom:
+                      description: PasswdFrom is a referenced source of passwd to
+                        populate the passwd.
+                      properties:
+                        secret:
+                          description: Secret represents a secret that should populate
+                            this password.
+                          properties:
+                            key:
+                              description: Key is the key in the secret's data map
+                                for this value.
+                              type: string
+                            name:
+                              description: Name of the secret in the KubeadmBootstrapConfig's
+                                namespace to use.
+                              type: string
+                          required:
+                          - key
+                          - name
+                          type: object
+                      required:
+                      - secret
+                      type: object
                     primaryGroup:
                       description: PrimaryGroup specifies the primary group for the
                         user

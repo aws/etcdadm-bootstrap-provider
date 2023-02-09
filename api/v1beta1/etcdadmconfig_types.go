@@ -88,6 +88,10 @@ type EtcdadmConfigSpec struct {
 	// Default is empty, which means that they will be auto-populated by Go.
 	// +optional
 	CipherSuites string `json:"cipherSuites,omitempty"`
+
+	// NTP specifies NTP configuration
+	// +optional
+	NTP *capbk.NTP `json:"ntp,omitempty"`
 }
 
 type BottlerocketConfig struct {
