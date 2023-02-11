@@ -40,6 +40,7 @@ type BaseUserData struct {
 	Mounts              []bootstrapv1.MountPoints
 	ControlPlane        bool
 	SentinelFileCommand string
+	Hostname            string
 	RegistryMirrorCredentials
 }
 

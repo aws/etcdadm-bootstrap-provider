@@ -242,6 +242,7 @@ func (r *EtcdadmConfigReconciler) initializeEtcd(ctx context.Context, scope *Sco
 			Users:              scope.Config.Spec.Users,
 			PreEtcdadmCommands: scope.Config.Spec.PreEtcdadmCommands,
 			NTP:                scope.Config.Spec.NTP,
+			Hostname:           scope.Machine.Name,
 		},
 		Certificates: CACertKeyPair,
 	}
@@ -325,6 +326,7 @@ func (r *EtcdadmConfigReconciler) joinEtcd(ctx context.Context, scope *Scope) (_
 			Users:              scope.Config.Spec.Users,
 			PreEtcdadmCommands: scope.Config.Spec.PreEtcdadmCommands,
 			NTP:                scope.Config.Spec.NTP,
+			Hostname:           scope.Machine.Name,
 		},
 		JoinAddress:  joinAddress,
 		Certificates: etcdCerts,

@@ -54,11 +54,13 @@ server-tls-bootstrap = false
 pod-infra-container-image = "{{.PauseContainerSource}}"
 {{- end -}}
 `
-
 	networkInitTemplate = `{{ define "networkInitSettings" -}}
 [settings.network]
+hostname = "{{.Hostname}}"
+{{- if (ne .HTTPSProxyEndpoint "")}}
 https-proxy = "{{.HTTPSProxyEndpoint}}"
 no-proxy = [{{stringsJoin .NoProxyEndpoints "," }}]
+{{- end -}}
 {{- end -}}
 `
 	registryMirrorTemplate = `{{ define "registryMirrorSettings" -}}
@@ -91,12 +93,10 @@ time-servers = [{{stringsJoin .NTPServers ", " }}]
 
 {{template "kubernetesInitSettings" .}}
 
+{{template "networkInitSettings" .}}
+
 {{- if .BootstrapContainers }}
 {{template "bootstrapContainersSettings" .}}
-{{- end -}}
-
-{{- if (ne .HTTPSProxyEndpoint "")}}
-{{template "networkInitSettings" .}}
 {{- end -}}
 
 {{- if (ne .RegistryMirrorEndpoint "")}}
@@ -125,13 +125,14 @@ type bottlerocketSettingsInput struct {
 	RegistryMirrorCACert   string
 	RegistryMirrorUsername string
 	RegistryMirrorPassword string
+	Hostname               string
 	HostContainers         []etcdbootstrapv1.BottlerocketHostContainer
 	BootstrapContainers    []etcdbootstrapv1.BottlerocketBootstrapContainer
 	NTPServers             []string
 }
 
 // generateBottlerocketNodeUserData returns the userdata for the host bottlerocket in toml format
-func generateBottlerocketNodeUserData(kubeadmBootstrapContainerUserData []byte, users []bootstrapv1.User, registryMirrorCredentials userdata.RegistryMirrorCredentials, config etcdbootstrapv1.EtcdadmConfigSpec, log logr.Logger) ([]byte, error) {
+func generateBottlerocketNodeUserData(kubeadmBootstrapContainerUserData []byte, users []bootstrapv1.User, registryMirrorCredentials userdata.RegistryMirrorCredentials, hostname string, config etcdbootstrapv1.EtcdadmConfigSpec, log logr.Logger) ([]byte, error) {
 	// base64 encode the kubeadm bootstrapContainer's user data
 	b64KubeadmBootstrapContainerUserData := base64.StdEncoding.EncodeToString(kubeadmBootstrapContainerUserData)
 
@@ -172,6 +173,7 @@ func generateBottlerocketNodeUserData(kubeadmBootstrapContainerUserData []byte, 
 		PauseContainerSource: config.BottlerocketConfig.PauseImage,
 		HostContainers:       hostContainers,
 		BootstrapContainers:  config.BottlerocketConfig.CustomBootstrapContainers,
+		Hostname:             hostname,
 	}
 
 	if config.Proxy != nil {
