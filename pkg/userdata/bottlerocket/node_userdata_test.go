@@ -12,7 +12,8 @@ import (
 	"github.com/aws/etcdadm-bootstrap-provider/pkg/userdata"
 )
 
-const userDataMinimum = `
+const (
+	userDataMinimum = `
 [settings.host-containers.admin]
 enabled = true
 superpowered = true
@@ -30,7 +31,7 @@ authentication-mode = "tls"
 server-tls-bootstrap = false
 pod-infra-container-image = "pause-image"`
 
-const userDataWithProxyRegistryBootstrapContainers = `
+	userDataWithProxyRegistryBootstrapContainers = `
 [settings.host-containers.admin]
 enabled = true
 superpowered = true
@@ -72,7 +73,7 @@ no-proxy = ["no-proxy-1","no-proxy-2"]
 data = "Y2FjZXJ0"
 trusted=true`
 
-const userDataWithCustomBootstrapContainer = `
+	userDataWithCustomBootstrapContainer = `
 [settings.host-containers.admin]
 enabled = true
 superpowered = true
@@ -106,7 +107,7 @@ mode = "once"
 source = "custom-bootstrap-image-2"
 user-data = "xyz"`
 
-const userDataWithRegistryAuth = `
+	userDataWithRegistryAuth = `
 [settings.host-containers.admin]
 enabled = true
 superpowered = true
@@ -137,8 +138,30 @@ registry = "registry-endpoint"
 username = "username"
 password = "password"`
 
+	userDataWithNTP = `
+[settings.host-containers.admin]
+enabled = true
+superpowered = true
+user-data = "CnsKCSJzc2giOiB7CgkJImF1dGhvcml6ZWQta2V5cyI6IFsic3NoLWtleSJdCgl9Cn0="
+[settings.host-containers.kubeadm-bootstrap]
+enabled = true
+superpowered = true
+source = "kubeadm-bootstrap-image"
+user-data = "a3ViZWFkbUJvb3RzdHJhcFVzZXJEYXRh"
+
+[settings.kubernetes]
+cluster-domain = "cluster.local"
+standalone-mode = true
+authentication-mode = "tls"
+server-tls-bootstrap = false
+pod-infra-container-image = "pause-image"
+[settings.ntp]
+time-servers = ["1.2.3.4", "time-a.capi.com", "time-b.capi.com"]`
+)
+
 func TestGenerateBottlerocketNodeUserData(t *testing.T) {
 	g := NewWithT(t)
+	trueVal := true
 
 	testcases := []struct {
 		name                     string
@@ -275,6 +298,32 @@ func TestGenerateBottlerocketNodeUserData(t *testing.T) {
 				},
 			},
 			output: userDataWithRegistryAuth,
+		},
+		{
+			name:                     "with NTP config",
+			kubeadmBootstrapUserData: "kubeadmBootstrapUserData",
+			users: []bootstrapv1.User{
+				{
+					SSHAuthorizedKeys: []string{
+						"ssh-key",
+					},
+				},
+			},
+			etcdConfig: v1beta1.EtcdadmConfigSpec{
+				BottlerocketConfig: &v1beta1.BottlerocketConfig{
+					BootstrapImage: "kubeadm-bootstrap-image",
+					PauseImage:     "pause-image",
+				},
+				NTP: &bootstrapv1.NTP{
+					Enabled: &trueVal,
+					Servers: []string{
+						"1.2.3.4",
+						"time-a.capi.com",
+						"time-b.capi.com",
+					},
+				},
+			},
+			output: userDataWithNTP,
 		},
 	}
 	for _, testcase := range testcases {

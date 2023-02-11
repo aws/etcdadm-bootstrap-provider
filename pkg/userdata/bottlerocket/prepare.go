@@ -59,9 +59,6 @@ func logIgnoredFields(input *userdata.BaseUserData, log logr.Logger) {
 	if len(input.PostEtcdadmCommands) > 0 {
 		log.Info("Ignoring PostEtcdadmCommands. Not supported with bottlerocket")
 	}
-	if input.NTP != nil {
-		log.Info("Ignoring NTP. Not supported with bottlerocket")
-	}
 	if input.DiskSetup != nil {
 		log.Info("Ignoring DiskSetup. Not supported with bottlerocket")
 	}
