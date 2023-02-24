@@ -20,5 +20,8 @@ require (
 
 replace (
 	github.com/docker/distribution => github.com/docker/distribution v2.8.1+incompatible
+	github.com/prometheus/client_golang => github.com/prometheus/client_golang v1.11.1
+	golang.org/x/crypto/ssh => golang.org/x/crypto/ssh v0.0.0-20220314234659-1baeb1ce4c0b
+	golang.org/x/net/http => golang.org/x/net/http v0.0.0-20220906165146-f3363e06e74c
 	sigs.k8s.io/cluster-api => github.com/mrajashree/cluster-api v1.1.3-custom
 )
