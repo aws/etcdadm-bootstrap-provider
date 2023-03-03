@@ -15,8 +15,9 @@ ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 TOOLS_DIR := hack/tools
 BIN_DIR := bin
 TOOLS_BIN_DIR := $(TOOLS_DIR)/$(BIN_DIR)
-CONTROLLER_GEN := $(abspath $(TOOLS_BIN_DIR)/controller-gen)
-CONVERSION_GEN := $(abspath $(TOOLS_BIN_DIR)/conversion-gen)
+ABS_TOOLS_BIN_DIR := $(abspath $(TOOLS_BIN_DIR))
+CONTROLLER_GEN := $(ABS_TOOLS_BIN_DIR)/controller-gen
+CONVERSION_GEN := $(ABS_TOOLS_BIN_DIR)/conversion-gen
 
 export PATH := $(abspath $(TOOLS_BIN_DIR)):$(PATH)
 
@@ -88,9 +89,11 @@ docker-build: test
 docker-push:
 	docker push ${IMG}
 
+$(TOOLS_BIN_DIR):
+	mkdir -p $(TOOLS_BIN_DIR)
 
-$(CONTROLLER_GEN): $(TOOLS_DIR)/go.mod # Build controller-gen from tools folder.
-	cd $(TOOLS_DIR); go build -tags=tools -o $(BIN_DIR)/controller-gen sigs.k8s.io/controller-tools/cmd/controller-gen
+$(CONTROLLER_GEN): $(TOOLS_BIN_DIR) # Build controller-gen from tools folder.
+	GOBIN=$(ABS_TOOLS_BIN_DIR) go install sigs.k8s.io/controller-tools/cmd/controller-gen@v0.7.0
 
-$(CONVERSION_GEN): $(TOOLS_DIR)/go.mod
-	cd $(TOOLS_DIR); go build -tags=tools -o $(BIN_DIR)/conversion-gen k8s.io/code-generator/cmd/conversion-gen
+$(CONVERSION_GEN): $(TOOLS_BIN_DIR)
+	GOBIN=$(ABS_TOOLS_BIN_DIR) go install k8s.io/code-generator/cmd/conversion-gen@v0.23.1
