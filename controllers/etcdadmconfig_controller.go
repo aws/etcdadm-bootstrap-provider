@@ -420,7 +420,7 @@ func (r *EtcdadmConfigReconciler) storeBootstrapData(ctx context.Context, config
 		if !apierrors.IsAlreadyExists(err) {
 			return errors.Wrapf(err, "failed to create bootstrap data secret for EtcdadmConfig %s/%s", config.Namespace, config.Name)
 		}
-		log.Info("bootstrap data secret for EtcdadmConfig already exists, updating", "secret", secret.Name, "EtcdadmConfig", config.Name)
+		log.Info("bootstrap data secret for EtcdadmConfig already exists, updating", "secret", se.Name, "EtcdadmConfig", config.Name)
 		if err := r.Client.Update(ctx, se); err != nil {
 			return errors.Wrapf(err, "failed to update bootstrap data secret for EtcdadmConfig %s/%s", config.Namespace, config.Name)
 		}
