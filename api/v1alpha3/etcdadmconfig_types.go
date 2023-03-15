@@ -116,6 +116,9 @@ type BottlerocketConfig struct {
 	// CustomBootstrapContainers adds additional bootstrap containers for bottlerocket.
 	// +optional
 	CustomBootstrapContainers []BottlerocketBootstrapContainer `json:"customBootstrapContainers,omitempty"`
+
+	// Kernel specifies additional kernel settings for bottlerocket
+	Kernel *capbk.BottlerocketKernelSettings `json:"kernel,omitempty"`
 }
 
 // BottlerocketHostContainer holds the host container setting for bottlerocket.

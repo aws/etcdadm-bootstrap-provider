@@ -187,16 +187,19 @@ user-data = "a3ViZWFkbUJvb3RzdHJhcFVzZXJEYXRh"
 enabled = true
 superpowered = false
 source = "custom-control-image"
+
 [settings.kubernetes]
 cluster-domain = "cluster.local"
 standalone-mode = true
 authentication-mode = "tls"
 server-tls-bootstrap = false
 pod-infra-container-image = "pause-image"
+
 [settings.network]
 hostname = "hostname"
 https-proxy = "https-proxy"
 no-proxy = ["no-proxy-1","no-proxy-2"]
+
 [settings.bootstrap-containers.custom-bootstrap-1]
 essential = true
 mode = "always"
@@ -212,6 +215,31 @@ user-data = "xyz"
 [settings.pki.registry-mirror-ca]
 data = "Y2FjZXJ0"
 trusted=true`
+
+	userDataWithKernelSettings = `
+[settings.host-containers.admin]
+enabled = true
+superpowered = true
+user-data = "CnsKCSJzc2giOiB7CgkJImF1dGhvcml6ZWQta2V5cyI6IFsic3NoLWtleSJdCgl9Cn0="
+[settings.host-containers.kubeadm-bootstrap]
+enabled = true
+superpowered = true
+source = "kubeadm-bootstrap-image"
+user-data = "a3ViZWFkbUJvb3RzdHJhcFVzZXJEYXRh"
+
+[settings.kubernetes]
+cluster-domain = "cluster.local"
+standalone-mode = true
+authentication-mode = "tls"
+server-tls-bootstrap = false
+pod-infra-container-image = "pause-image"
+
+[settings.network]
+hostname = ""
+[settings.kernel.sysctl]
+"foo" = "bar"
+"abc" = "def"
+`
 )
 
 func TestGenerateBottlerocketNodeUserData(t *testing.T) {
@@ -429,6 +457,30 @@ func TestGenerateBottlerocketNodeUserData(t *testing.T) {
 				},
 			},
 			output: userDataWithHostname,
+		},
+		{
+			name:                     "with kernel config",
+			kubeadmBootstrapUserData: "kubeadmBootstrapUserData",
+			users: []bootstrapv1.User{
+				{
+					SSHAuthorizedKeys: []string{
+						"ssh-key",
+					},
+				},
+			},
+			etcdConfig: v1beta1.EtcdadmConfigSpec{
+				BottlerocketConfig: &v1beta1.BottlerocketConfig{
+					BootstrapImage: "kubeadm-bootstrap-image",
+					PauseImage:     "pause-image",
+					Kernel: &bootstrapv1.BottlerocketKernelSettings{
+						SysctlSettings: map[string]string{
+							"foo": "bar",
+							"abc": "def",
+						},
+					},
+				},
+			},
+			output: userDataWithKernelSettings,
 		},
 	}
 	for _, testcase := range testcases {

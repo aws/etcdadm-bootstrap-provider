@@ -3,6 +3,7 @@ package bottlerocket
 import (
 	"bytes"
 	"encoding/base64"
+	"fmt"
 	"strconv"
 	"strings"
 	"text/template"
@@ -88,7 +89,13 @@ password = "{{.RegistryMirrorPassword}}"
 	ntpTemplate = `{{ define "ntpSettings" -}}
 [settings.ntp]
 time-servers = [{{stringsJoin .NTPServers ", " }}]
-{{- end -}}`
+{{- end -}}
+`
+	sysctlSettingsTemplate = `{{ define "sysctlSettingsTemplate" -}}
+[settings.kernel.sysctl]
+{{.SysctlSettings}}
+{{- end -}}
+`
 	bottlerocketNodeInitSettingsTemplate = `{{template "hostContainersSettings" .}}
 
 {{template "kubernetesInitSettings" .}}
@@ -114,6 +121,10 @@ time-servers = [{{stringsJoin .NTPServers ", " }}]
 {{- if .NTPServers}}
 {{template "ntpSettings" .}}
 {{- end -}}
+
+{{- if (ne .SysctlSettings "")}}
+{{template "sysctlSettingsTemplate" .}}
+{{- end -}}
 `
 )
 
@@ -129,6 +140,7 @@ type bottlerocketSettingsInput struct {
 	HostContainers         []etcdbootstrapv1.BottlerocketHostContainer
 	BootstrapContainers    []etcdbootstrapv1.BottlerocketBootstrapContainer
 	NTPServers             []string
+	SysctlSettings         string
 }
 
 // generateBottlerocketNodeUserData returns the userdata for the host bottlerocket in toml format
@@ -198,12 +210,25 @@ func generateBottlerocketNodeUserData(kubeadmBootstrapContainerUserData []byte, 
 		}
 	}
 
+	if config.BottlerocketConfig != nil && config.BottlerocketConfig.Kernel != nil {
+		bottlerocketInput.SysctlSettings = parseSysctlSettings(config.BottlerocketConfig.Kernel.SysctlSettings)
+	}
+
 	bottlerocketNodeUserData, err := generateNodeUserData("InitBottlerocketNode", bottlerocketNodeInitSettingsTemplate, bottlerocketInput)
 	if err != nil {
 		return nil, err
 	}
 	log.Info("Generated bottlerocket bootstrap userdata", "bootstrapContainerImage", config.BottlerocketConfig.BootstrapImage)
 	return bottlerocketNodeUserData, nil
+}
+
+// parseKernelSettings parses through all the the settings and returns a list of the settings.
+func parseSysctlSettings(sysctlSettings map[string]string) string {
+	sysctlSettingsToml := ""
+	for key, value := range sysctlSettings {
+		sysctlSettingsToml += fmt.Sprintf("\"%s\" = \"%s\"\n", key, value)
+	}
+	return sysctlSettingsToml
 }
 
 // getAllAuthorizedKeys parses through all the users and return list of all user's authorized ssh keys
@@ -262,7 +287,9 @@ func generateNodeUserData(kind string, tpl string, data interface{}) ([]byte, er
 	if _, err := tm.Parse(ntpTemplate); err != nil {
 		return nil, errors.Wrapf(err, "failed to parse NTP %s template", kind)
 	}
-
+	if _, err := tm.Parse(sysctlSettingsTemplate); err != nil {
+		return nil, errors.Wrapf(err, "failed to parse sysctl settings %s template", kind)
+	}
 	t, err := tm.Parse(tpl)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to parse %s template", kind)
