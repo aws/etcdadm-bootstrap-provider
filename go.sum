@@ -51,8 +51,8 @@ github.com/Masterminds/goutils v1.1.1 h1:5nUrii3FMTL5diU80unEVvNevw1nH4+ZV4DSLVJ
 github.com/Masterminds/semver/v3 v3.2.0 h1:3MEsd0SM6jqZojhjLWWeBY+Kcjy9i6MQAeY7YgDP83g=
 github.com/Masterminds/sprig/v3 v3.2.3 h1:eL2fZNezLomi0uOLqjQoN6BfsDD+fyLtgbJMAj9n6YA=
 github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAElWljhcU=
-github.com/abhay-krishna/cluster-api v1.3.5-eksa.2 h1:rpwKehV1TSRB+ab1s3jkfIoHs5inxNGZaEX7pGm33xc=
-github.com/abhay-krishna/cluster-api v1.3.5-eksa.2/go.mod h1:hX5YK+6WVfT6MqhPKoG2y+qd98I4415oPfNCsdv9dwo=
+github.com/abhay-krishna/cluster-api v1.3.5-eksa.3 h1:zpF81BK5giXDt016189hYiAYL06xNkDBImd4g3iX1Ug=
+github.com/abhay-krishna/cluster-api v1.3.5-eksa.3/go.mod h1:hX5YK+6WVfT6MqhPKoG2y+qd98I4415oPfNCsdv9dwo=
 github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
 github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
 github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf/go.mod h1:ybxpYRFXyAe+OPACYpWeL0wqObRcbAqCMya13uyzqw0=

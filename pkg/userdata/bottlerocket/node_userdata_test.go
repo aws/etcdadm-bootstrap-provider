@@ -240,6 +240,38 @@ hostname = ""
 "foo" = "bar"
 "abc" = "def"
 `
+
+	userDataWithBootSettings = `
+[settings.host-containers.admin]
+enabled = true
+superpowered = true
+user-data = "CnsKCSJzc2giOiB7CgkJImF1dGhvcml6ZWQta2V5cyI6IFsic3NoLWtleSJdCgl9Cn0="
+[settings.host-containers.kubeadm-bootstrap]
+enabled = true
+superpowered = true
+source = "kubeadm-bootstrap-image"
+user-data = "a3ViZWFkbUJvb3RzdHJhcFVzZXJEYXRh"
+
+[settings.kubernetes]
+cluster-domain = "cluster.local"
+standalone-mode = true
+authentication-mode = "tls"
+server-tls-bootstrap = false
+pod-infra-container-image = "pause-image"
+
+[settings.network]
+hostname = ""
+[settings.kernel.sysctl]
+"foo" = "bar"
+"abc" = "def"
+
+[settings.boot]
+reboot-to-reconcile = true
+
+[settings.boot.kernel-parameters]
+"foo" = ["abc","def,123"]
+"bar" = []
+`
 )
 
 func TestGenerateBottlerocketNodeUserData(t *testing.T) {
@@ -481,6 +513,39 @@ func TestGenerateBottlerocketNodeUserData(t *testing.T) {
 				},
 			},
 			output: userDataWithKernelSettings,
+		},
+		{
+			name:                     "with boot settings config",
+			kubeadmBootstrapUserData: "kubeadmBootstrapUserData",
+			users: []bootstrapv1.User{
+				{
+					SSHAuthorizedKeys: []string{
+						"ssh-key",
+					},
+				},
+			},
+			etcdConfig: v1beta1.EtcdadmConfigSpec{
+				BottlerocketConfig: &v1beta1.BottlerocketConfig{
+					BootstrapImage: "kubeadm-bootstrap-image",
+					PauseImage:     "pause-image",
+					Kernel: &bootstrapv1.BottlerocketKernelSettings{
+						SysctlSettings: map[string]string{
+							"foo": "bar",
+							"abc": "def",
+						},
+					},
+					Boot: &bootstrapv1.BottlerocketBootSettings{
+						BootKernelParameters: map[string][]string{
+							"foo": {
+								"abc",
+								"def,123",
+							},
+							"bar": {},
+						},
+					},
+				},
+			},
+			output: userDataWithBootSettings,
 		},
 	}
 	for _, testcase := range testcases {
