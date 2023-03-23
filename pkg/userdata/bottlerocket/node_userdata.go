@@ -96,14 +96,6 @@ time-servers = [{{stringsJoin .NTPServers ", " }}]
 {{.SysctlSettings}}
 {{- end -}}
 `
-	bootSettingsTemplate = `{{ define "bootSettings" -}}
-[settings.boot]
-reboot-to-reconcile = true
-
-[settings.boot.kernel-parameters]
-{{.BootKernel}}
-{{- end -}}
-`
 	bottlerocketNodeInitSettingsTemplate = `{{template "hostContainersSettings" .}}
 
 {{template "kubernetesInitSettings" .}}
@@ -133,10 +125,6 @@ reboot-to-reconcile = true
 {{- if (ne .SysctlSettings "")}}
 {{template "sysctlSettingsTemplate" .}}
 {{- end -}}
-
-{{- if .BootKernel}}
-{{template "bootSettings" .}}
-{{- end -}}
 `
 )
 
@@ -153,7 +141,6 @@ type bottlerocketSettingsInput struct {
 	BootstrapContainers    []etcdbootstrapv1.BottlerocketBootstrapContainer
 	NTPServers             []string
 	SysctlSettings         string
-	BootKernel             string
 }
 
 // generateBottlerocketNodeUserData returns the userdata for the host bottlerocket in toml format
@@ -223,13 +210,8 @@ func generateBottlerocketNodeUserData(kubeadmBootstrapContainerUserData []byte, 
 		}
 	}
 
-	if config.BottlerocketConfig != nil {
-		if config.BottlerocketConfig.Kernel != nil {
-			bottlerocketInput.SysctlSettings = parseSysctlSettings(config.BottlerocketConfig.Kernel.SysctlSettings)
-		}
-		if config.BottlerocketConfig.Boot != nil {
-			bottlerocketInput.BootKernel = parseBootSettings(config.BottlerocketConfig.Boot.BootKernelParameters)
-		}
+	if config.BottlerocketConfig != nil && config.BottlerocketConfig.Kernel != nil {
+		bottlerocketInput.SysctlSettings = parseSysctlSettings(config.BottlerocketConfig.Kernel.SysctlSettings)
 	}
 
 	bottlerocketNodeUserData, err := generateNodeUserData("InitBottlerocketNode", bottlerocketNodeInitSettingsTemplate, bottlerocketInput)
@@ -247,23 +229,6 @@ func parseSysctlSettings(sysctlSettings map[string]string) string {
 		sysctlSettingsToml += fmt.Sprintf("\"%s\" = \"%s\"\n", key, value)
 	}
 	return sysctlSettingsToml
-}
-
-// parseBootSettings parses through all the boot settings and returns a list of the settings.
-func parseBootSettings(bootSettings map[string][]string) string {
-	bootSettingsToml := ""
-	for key, value := range bootSettings {
-		var values []string
-		if len(value) != 0 {
-			for _, val := range value {
-				quotedVal := "\"" + val + "\""
-				values = append(values, quotedVal)
-			}
-		}
-		keyVal := strings.Join(values, ",")
-		bootSettingsToml += fmt.Sprintf("\"%v\" = [%v]\n", key, keyVal)
-	}
-	return bootSettingsToml
 }
 
 // getAllAuthorizedKeys parses through all the users and return list of all user's authorized ssh keys
@@ -324,9 +289,6 @@ func generateNodeUserData(kind string, tpl string, data interface{}) ([]byte, er
 	}
 	if _, err := tm.Parse(sysctlSettingsTemplate); err != nil {
 		return nil, errors.Wrapf(err, "failed to parse sysctl settings %s template", kind)
-	}
-	if _, err := tm.Parse(bootSettingsTemplate); err != nil {
-		return nil, errors.Wrapf(err, "failed to parse boot settings %s template", kind)
 	}
 	t, err := tm.Parse(tpl)
 	if err != nil {

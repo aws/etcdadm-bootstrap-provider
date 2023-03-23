@@ -44,16 +44,6 @@ spec:
                     description: AdminImage specifies the admin container image to
                       use for bottlerocket.
                     type: string
-                  bootKernel:
-                    description: Boot specifies boot settings for bottlerocket
-                    properties:
-                      bootKernelParameters:
-                        additionalProperties:
-                          items:
-                            type: string
-                          type: array
-                        type: object
-                    type: object
                   bootstrapImage:
                     description: BootstrapImage specifies the container image to use
                       for bottlerocket's bootstrapping
@@ -452,16 +442,6 @@ spec:
                     description: AdminImage specifies the admin container image to
                       use for bottlerocket.
                     type: string
-                  bootKernel:
-                    description: Boot specifies boot settings for bottlerocket
-                    properties:
-                      bootKernelParameters:
-                        additionalProperties:
-                          items:
-                            type: string
-                          type: array
-                        type: object
-                    type: object
                   bootstrapImage:
                     description: BootstrapImage specifies the container image to use
                       for bottlerocket's bootstrapping
@@ -545,8 +525,6 @@ spec:
                       sysctlSettings:
                         additionalProperties:
                           type: string
-                        description: SysctlSettings defines the kernel sysctl settings
-                          to set for bottlerocket nodes.
                         type: object
                     type: object
                   pauseImage:
