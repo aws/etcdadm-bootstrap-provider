@@ -124,7 +124,7 @@ type BottlerocketConfig struct {
 	Kernel *capbk.BottlerocketKernelSettings `json:"kernel,omitempty"`
 
 	// Boot specifies boot settings for bottlerocket
-	Boot *capbk.BottlerocketBootSettings `json:"bootKernel,omitempty"`
+	Boot *capbk.BottlerocketBootSettings `json:"boot,omitempty"`
 }
 
 // BottlerocketHostContainer holds the host container setting for bottlerocket.
