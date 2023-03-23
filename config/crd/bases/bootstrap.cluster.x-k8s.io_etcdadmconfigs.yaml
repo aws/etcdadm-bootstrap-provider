@@ -44,7 +44,7 @@ spec:
                     description: AdminImage specifies the admin container image to
                       use for bottlerocket.
                     type: string
-                  bootKernel:
+                  boot:
                     description: Boot specifies boot settings for bottlerocket
                     properties:
                       bootKernelParameters:
@@ -452,7 +452,7 @@ spec:
                     description: AdminImage specifies the admin container image to
                       use for bottlerocket.
                     type: string
-                  bootKernel:
+                  boot:
                     description: Boot specifies boot settings for bottlerocket
                     properties:
                       bootKernelParameters:
