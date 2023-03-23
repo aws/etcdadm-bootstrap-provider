@@ -178,6 +178,7 @@ func autoConvert_v1alpha3_BottlerocketConfig_To_v1beta1_BottlerocketConfig(in *B
 	out.CustomHostContainers = *(*[]v1beta1.BottlerocketHostContainer)(unsafe.Pointer(&in.CustomHostContainers))
 	out.CustomBootstrapContainers = *(*[]v1beta1.BottlerocketBootstrapContainer)(unsafe.Pointer(&in.CustomBootstrapContainers))
 	out.Kernel = (*apiv1beta1.BottlerocketKernelSettings)(unsafe.Pointer(in.Kernel))
+	out.Boot = (*apiv1beta1.BottlerocketBootSettings)(unsafe.Pointer(in.Boot))
 	return nil
 }
 
@@ -195,6 +196,7 @@ func autoConvert_v1beta1_BottlerocketConfig_To_v1alpha3_BottlerocketConfig(in *v
 	out.CustomHostContainers = *(*[]BottlerocketHostContainer)(unsafe.Pointer(&in.CustomHostContainers))
 	out.CustomBootstrapContainers = *(*[]BottlerocketBootstrapContainer)(unsafe.Pointer(&in.CustomBootstrapContainers))
 	out.Kernel = (*apiv1beta1.BottlerocketKernelSettings)(unsafe.Pointer(in.Kernel))
+	out.Boot = (*apiv1beta1.BottlerocketBootSettings)(unsafe.Pointer(in.Boot))
 	return nil
 }
 
