@@ -104,6 +104,18 @@ reboot-to-reconcile = true
 {{.BootKernel}}
 {{- end -}}
 `
+	certsTemplate = `{{ define "certsSettings" -}}
+[settings.pki.{{.Name}}]
+data = "{{.Data}}"
+trusted = true
+{{- end -}}
+`
+	certBundlesSliceTemplate = `{{ define "certBundlesSlice" -}}
+{{- range $cBundle := .CertBundles }}
+{{template "certsSettings" $cBundle }}
+{{- end -}}
+{{- end -}}
+`
 	bottlerocketNodeInitSettingsTemplate = `{{template "hostContainersSettings" .}}
 
 {{template "kubernetesInitSettings" .}}
@@ -137,6 +149,10 @@ reboot-to-reconcile = true
 {{- if .BootKernel}}
 {{template "bootSettings" .}}
 {{- end -}}
+
+{{- if .CertBundles}}
+{{template "certBundlesSlice" .}}
+{{- end -}}
 `
 )
 
@@ -154,6 +170,7 @@ type bottlerocketSettingsInput struct {
 	NTPServers             []string
 	SysctlSettings         string
 	BootKernel             string
+	CertBundles            []bootstrapv1.CertBundle
 }
 
 // generateBottlerocketNodeUserData returns the userdata for the host bottlerocket in toml format
@@ -220,6 +237,16 @@ func generateBottlerocketNodeUserData(kubeadmBootstrapContainerUserData []byte, 
 	if config.NTP != nil && config.NTP.Enabled != nil && *config.NTP.Enabled {
 		for _, ntpServer := range config.NTP.Servers {
 			bottlerocketInput.NTPServers = append(bottlerocketInput.NTPServers, strconv.Quote(ntpServer))
+		}
+	}
+
+	// if config.CertBundles != nil {
+	// 	bottlerocketInput.CertBundles = config.CertBundles
+	// }
+	if config.CertBundles != nil {
+		for _, cert := range config.CertBundles {
+			cert.Data = base64.StdEncoding.EncodeToString([]byte(cert.Data))
+			bottlerocketInput.CertBundles = append(bottlerocketInput.CertBundles, cert)
 		}
 	}
 
@@ -327,6 +354,12 @@ func generateNodeUserData(kind string, tpl string, data interface{}) ([]byte, er
 	}
 	if _, err := tm.Parse(bootSettingsTemplate); err != nil {
 		return nil, errors.Wrapf(err, "failed to parse boot settings %s template", kind)
+	}
+	if _, err := tm.Parse(certsTemplate); err != nil {
+		return nil, errors.Wrapf(err, "failed to parse certs %s template", kind)
+	}
+	if _, err := tm.Parse(certBundlesSliceTemplate); err != nil {
+		return nil, errors.Wrapf(err, "failed to parse cert bundles %s template", kind)
 	}
 	t, err := tm.Parse(tpl)
 	if err != nil {

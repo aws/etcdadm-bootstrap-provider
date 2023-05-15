@@ -77,4 +77,4 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
-replace sigs.k8s.io/cluster-api => github.com/abhay-krishna/cluster-api v1.3.5-eksa.3
+replace sigs.k8s.io/cluster-api => github.com/ahreehong/cluster-api v1.3.5-eksa.3.0.20230411233819-1a8dfa0550ba

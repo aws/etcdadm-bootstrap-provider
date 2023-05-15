@@ -92,6 +92,10 @@ type EtcdadmConfigSpec struct {
 	// NTP specifies NTP configuration
 	// +optional
 	NTP *capbk.NTP `json:"ntp,omitempty"`
+
+	// Certbundle holds additional cert bundles.
+	// +optional
+	CertBundles []capbk.CertBundle `json:"certBundles,omitempty"`
 }
 
 type BottlerocketConfig struct {

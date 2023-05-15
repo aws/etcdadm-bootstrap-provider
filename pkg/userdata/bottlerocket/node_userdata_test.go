@@ -272,6 +272,34 @@ reboot-to-reconcile = true
 "foo" = ["abc","def,123"]
 "bar" = []
 `
+
+	userDataWithCertBundleSettings = `
+[settings.host-containers.admin]
+enabled = true
+superpowered = true
+user-data = "CnsKCSJzc2giOiB7CgkJImF1dGhvcml6ZWQta2V5cyI6IFsic3NoLWtleSJdCgl9Cn0="
+[settings.host-containers.kubeadm-bootstrap]
+enabled = true
+superpowered = true
+source = "kubeadm-bootstrap-image"
+user-data = "a3ViZWFkbUJvb3RzdHJhcFVzZXJEYXRh"
+
+[settings.kubernetes]
+cluster-domain = "cluster.local"
+standalone-mode = true
+authentication-mode = "tls"
+server-tls-bootstrap = false
+pod-infra-container-image = "pause-image"
+
+[settings.network]
+hostname = ""
+
+[settings.pki.bundle1]
+data = "QUJDREVG"
+trusted = true
+[settings.pki.bundle2]
+data = "MTIzNDU2"
+trusted = true`
 )
 
 func TestGenerateBottlerocketNodeUserData(t *testing.T) {
@@ -546,6 +574,34 @@ func TestGenerateBottlerocketNodeUserData(t *testing.T) {
 				},
 			},
 			output: userDataWithBootSettings,
+		},
+		{
+			name:                     "with cert bundle settings config",
+			kubeadmBootstrapUserData: "kubeadmBootstrapUserData",
+			users: []bootstrapv1.User{
+				{
+					SSHAuthorizedKeys: []string{
+						"ssh-key",
+					},
+				},
+			},
+			etcdConfig: v1beta1.EtcdadmConfigSpec{
+				CertBundles: []bootstrapv1.CertBundle{
+					{
+						Name: "bundle1",
+						Data: "ABCDEF",
+					},
+					{
+						Name: "bundle2",
+						Data: "123456",
+					},
+				},
+				BottlerocketConfig: &v1beta1.BottlerocketConfig{
+					BootstrapImage: "kubeadm-bootstrap-image",
+					PauseImage:     "pause-image",
+				},
+			},
+			output: userDataWithCertBundleSettings,
 		},
 	}
 	for _, testcase := range testcases {
