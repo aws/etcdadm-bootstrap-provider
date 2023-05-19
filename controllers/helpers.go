@@ -41,7 +41,7 @@ func (r *EtcdadmConfigReconciler) ClusterToEtcdadmConfigs(o client.Object) []ctr
 	selectors := []client.ListOption{
 		client.InNamespace(c.Namespace),
 		client.MatchingLabels{
-			clusterv1.ClusterLabelName: c.Name,
+			clusterv1.ClusterNameLabel: c.Name,
 		},
 	}
 

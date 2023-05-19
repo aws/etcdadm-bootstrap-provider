@@ -240,9 +240,6 @@ func generateBottlerocketNodeUserData(kubeadmBootstrapContainerUserData []byte, 
 		}
 	}
 
-	// if config.CertBundles != nil {
-	// 	bottlerocketInput.CertBundles = config.CertBundles
-	// }
 	if config.CertBundles != nil {
 		for _, cert := range config.CertBundles {
 			cert.Data = base64.StdEncoding.EncodeToString([]byte(cert.Data))

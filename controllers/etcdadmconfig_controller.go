@@ -396,7 +396,7 @@ func (r *EtcdadmConfigReconciler) storeBootstrapData(ctx context.Context, config
 			Name:      config.Name,
 			Namespace: config.Namespace,
 			Labels: map[string]string{
-				clusterv1.ClusterLabelName: clusterName,
+				clusterv1.ClusterNameLabel: clusterName,
 			},
 			OwnerReferences: []metav1.OwnerReference{
 				{
