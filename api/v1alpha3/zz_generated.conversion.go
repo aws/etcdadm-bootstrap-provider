@@ -346,6 +346,7 @@ func autoConvert_v1alpha3_EtcdadmConfigSpec_To_v1beta1_EtcdadmConfigSpec(in *Etc
 	out.RegistryMirror = (*v1beta1.RegistryMirrorConfiguration)(unsafe.Pointer(in.RegistryMirror))
 	out.CipherSuites = in.CipherSuites
 	out.NTP = (*apiv1beta1.NTP)(unsafe.Pointer(in.NTP))
+	out.CertBundles = *(*[]apiv1beta1.CertBundle)(unsafe.Pointer(&in.CertBundles))
 	return nil
 }
 
@@ -376,6 +377,7 @@ func autoConvert_v1beta1_EtcdadmConfigSpec_To_v1alpha3_EtcdadmConfigSpec(in *v1b
 	out.RegistryMirror = (*RegistryMirrorConfiguration)(unsafe.Pointer(in.RegistryMirror))
 	out.CipherSuites = in.CipherSuites
 	out.NTP = (*apiv1beta1.NTP)(unsafe.Pointer(in.NTP))
+	out.CertBundles = *(*[]apiv1beta1.CertBundle)(unsafe.Pointer(&in.CertBundles))
 	return nil
 }
 

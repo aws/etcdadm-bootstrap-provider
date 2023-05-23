@@ -1,11 +1,9 @@
-
 ---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.7.0
-  creationTimestamp: null
+    controller-gen.kubebuilder.io/version: v0.11.4
   name: etcdadmconfigs.bootstrap.cluster.x-k8s.io
 spec:
   group: bootstrap.cluster.x-k8s.io
@@ -149,6 +147,22 @@ spec:
                 - bootstrapImage
                 - pauseImage
                 type: object
+              certBundles:
+                description: Certbundle holds additional cert bundles.
+                items:
+                  description: CertBundle holds the cert data.
+                  properties:
+                    data:
+                      description: Data is the actual cert.
+                      type: string
+                    name:
+                      description: Name is the name of the cert bundle.
+                      type: string
+                  required:
+                  - data
+                  - name
+                  type: object
+                type: array
               cipherSuites:
                 description: CipherSuites is a list of comma-delimited supported TLS
                   cipher suites, mapping to the --cipher-suites flag. Default is empty,
@@ -557,6 +571,22 @@ spec:
                 - bootstrapImage
                 - pauseImage
                 type: object
+              certBundles:
+                description: Certbundle holds additional cert bundles.
+                items:
+                  description: CertBundle holds the cert data.
+                  properties:
+                    data:
+                      description: Data is the actual cert.
+                      type: string
+                    name:
+                      description: Name is the name of the cert bundle.
+                      type: string
+                  required:
+                  - data
+                  - name
+                  type: object
+                type: array
               cipherSuites:
                 description: CipherSuites is a list of comma-delimited supported TLS
                   cipher suites, mapping to the --cipher-suites flag. Default is empty,
@@ -833,9 +863,3 @@ spec:
     storage: true
     subresources:
       status: {}
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: []
-  storedVersions: []

@@ -3,9 +3,10 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"k8s.io/utils/pointer"
 	"testing"
 	"time"
+
+	"k8s.io/utils/pointer"
 
 	etcdbootstrapv1 "github.com/aws/etcdadm-bootstrap-provider/api/v1beta1"
 	. "github.com/onsi/gomega"
@@ -337,7 +338,7 @@ func TestEtcdadmConfigBootstrapDataSecretCreatedStatusNotPatched(t *testing.T) {
 			Name:      config.Name,
 			Namespace: config.Namespace,
 			Labels: map[string]string{
-				clusterv1.ClusterLabelName: cluster.Name,
+				clusterv1.ClusterNameLabel: cluster.Name,
 			},
 			OwnerReferences: []metav1.OwnerReference{
 				{
@@ -675,7 +676,7 @@ func newMachine(cluster *clusterv1.Cluster, name string) *clusterv1.Machine {
 	if cluster != nil {
 		machine.Spec.ClusterName = cluster.Name
 		machine.ObjectMeta.Labels = map[string]string{
-			clusterv1.ClusterLabelName: cluster.Name,
+			clusterv1.ClusterNameLabel: cluster.Name,
 		}
 	}
 	return machine
