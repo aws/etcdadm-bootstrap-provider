@@ -346,7 +346,7 @@ func TestEtcdadmConfigBootstrapDataSecretCreatedStatusNotPatched(t *testing.T) {
 					Kind:       config.Kind,
 					Name:       config.Name,
 					UID:        config.UID,
-					Controller: pointer.BoolPtr(true),
+					Controller: pointer.Bool(true),
 				},
 			},
 		},
@@ -472,7 +472,6 @@ func TestEtcdadmConfigReconciler_JoinMemberInitSecretNotReady(t *testing.T) {
 	_, err := k.Reconcile(ctx, request)
 	g.Expect(err).To(HaveOccurred())
 	g.Expect(err.Error()).Should(ContainSubstring("not found"))
-
 }
 
 func TestEtcdadmConfigReconciler_JoinMemberIfEtcdIsInitialized_CloudInit(t *testing.T) {
@@ -487,7 +486,7 @@ func TestEtcdadmConfigReconciler_JoinMemberIfEtcdIsInitialized_CloudInit(t *test
 	config := newEtcdadmConfig(machine, "etcdadmConfig", etcdbootstrapv1.CloudConfig)
 
 	etcdCACerts := etcdCACertKeyPair()
-	etcdCACerts.Generate()
+	g.Expect(etcdCACerts.Generate()).To(Succeed())
 	etcdCASecret := etcdCACerts[0].AsSecret(client.ObjectKey{Namespace: cluster.Namespace, Name: cluster.Name}, *metav1.NewControllerRef(config, etcdbootstrapv1.GroupVersion.WithKind("EtcdadmConfig")))
 
 	objects := []client.Object{
@@ -541,7 +540,7 @@ func TestEtcdadmConfigReconciler_JoinMemberIfEtcdIsInitialized_Bottlerocket(t *t
 	config := newEtcdadmConfig(machine, "etcdadmConfig", etcdbootstrapv1.Bottlerocket)
 
 	etcdCACerts := etcdCACertKeyPair()
-	etcdCACerts.Generate()
+	g.Expect(etcdCACerts.Generate()).To(Succeed())
 	etcdCASecret := etcdCACerts[0].AsSecret(client.ObjectKey{Namespace: cluster.Namespace, Name: cluster.Name}, *metav1.NewControllerRef(config, etcdbootstrapv1.GroupVersion.WithKind("EtcdadmConfig")))
 
 	objects := []client.Object{
