@@ -404,7 +404,7 @@ func (r *EtcdadmConfigReconciler) storeBootstrapData(ctx context.Context, config
 					Kind:       config.Kind,
 					Name:       config.Name,
 					UID:        config.UID,
-					Controller: pointer.BoolPtr(true),
+					Controller: pointer.Bool(true),
 				},
 			},
 		},
@@ -425,7 +425,7 @@ func (r *EtcdadmConfigReconciler) storeBootstrapData(ctx context.Context, config
 			return errors.Wrapf(err, "failed to update bootstrap data secret for EtcdadmConfig %s/%s", config.Namespace, config.Name)
 		}
 	}
-	config.Status.DataSecretName = pointer.StringPtr(se.Name)
+	config.Status.DataSecretName = pointer.String(se.Name)
 	config.Status.Ready = true
 	conditions.MarkTrue(config, bootstrapv1.DataSecretAvailableCondition)
 	return nil
