@@ -55,7 +55,7 @@ func TestEtcdadmConfigReconciler_MachineToBootstrapMapFuncReturn(t *testing.T) {
 		Client: fakeClient,
 	}
 	o := m
-	configs := reconciler.MachineToBootstrapMapFunc(o)
+	configs := reconciler.MachineToBootstrapMapFunc(context.Background(), o)
 	g.Expect(configs[0].Name).To(Equal(expectedConfigName))
 }
 
@@ -78,7 +78,7 @@ func TestEtcdadmConfigReconciler_ClusterToEtcdadmConfigs(t *testing.T) {
 		Client: fakeClient,
 	}
 	o := cluster
-	configs := reconciler.ClusterToEtcdadmConfigs(o)
+	configs := reconciler.ClusterToEtcdadmConfigs(context.Background(), o)
 	g.Expect(configs[0].Name).To(Equal(expectedConfigName))
 }
 
@@ -244,7 +244,11 @@ func TestEtcdadmConfigReconciler_InitializeEtcdIfInitLockIsNotAquired_Cloudinit(
 		machine,
 		config,
 	}
-	myclient := fake.NewClientBuilder().WithScheme(setupScheme()).WithObjects(objects...).Build()
+	myclient := fake.NewClientBuilder().
+		WithScheme(setupScheme()).
+		WithObjects(objects...).
+		WithStatusSubresource(&etcdbootstrapv1.EtcdadmConfig{}).
+		Build()
 
 	k := &EtcdadmConfigReconciler{
 		Log:             log.Log,
@@ -282,7 +286,11 @@ func TestEtcdadmConfigReconciler_InitializeEtcdIfInitLockIsNotAquired_Bottlerock
 		machine,
 		config,
 	}
-	myclient := fake.NewClientBuilder().WithScheme(setupScheme()).WithObjects(objects...).Build()
+	myclient := fake.NewClientBuilder().
+		WithScheme(setupScheme()).
+		WithObjects(objects...).
+		WithStatusSubresource(&etcdbootstrapv1.EtcdadmConfig{}).
+		Build()
 
 	k := &EtcdadmConfigReconciler{
 		Log:             log.Log,
@@ -320,7 +328,11 @@ func TestEtcdadmConfigBootstrapDataSecretCreatedStatusNotPatched(t *testing.T) {
 		machine,
 		config,
 	}
-	myclient := fake.NewClientBuilder().WithScheme(setupScheme()).WithObjects(objects...).Build()
+	myclient := fake.NewClientBuilder().
+		WithScheme(setupScheme()).
+		WithObjects(objects...).
+		WithStatusSubresource(&etcdbootstrapv1.EtcdadmConfig{}).
+		Build()
 
 	k := &EtcdadmConfigReconciler{
 		Log:             log.Log,
@@ -382,7 +394,11 @@ func TestEtcdadmConfigReconciler_PreEtcdadmCommandsWhenEtcdadmNotBuiltin(t *test
 		machine,
 		config,
 	}
-	myclient := fake.NewClientBuilder().WithScheme(setupScheme()).WithObjects(objects...).Build()
+	myclient := fake.NewClientBuilder().
+		WithScheme(setupScheme()).
+		WithObjects(objects...).
+		WithStatusSubresource(&etcdbootstrapv1.EtcdadmConfig{}).
+		Build()
 
 	k := &EtcdadmConfigReconciler{
 		Log:             log.Log,
@@ -420,7 +436,11 @@ func TestEtcdadmConfigReconciler_RequeueIfInitLockIsAquired(t *testing.T) {
 		machine,
 		config,
 	}
-	myclient := fake.NewClientBuilder().WithScheme(setupScheme()).WithObjects(objects...).Build()
+	myclient := fake.NewClientBuilder().
+		WithScheme(setupScheme()).
+		WithObjects(objects...).
+		WithStatusSubresource(&etcdbootstrapv1.EtcdadmConfig{}).
+		Build()
 
 	k := &EtcdadmConfigReconciler{
 		Log:             log.Log,
@@ -496,7 +516,11 @@ func TestEtcdadmConfigReconciler_JoinMemberIfEtcdIsInitialized_CloudInit(t *test
 		etcdCASecret,
 		config,
 	}
-	myclient := fake.NewClientBuilder().WithScheme(setupScheme()).WithObjects(objects...).Build()
+	myclient := fake.NewClientBuilder().
+		WithScheme(setupScheme()).
+		WithObjects(objects...).
+		WithStatusSubresource(&etcdbootstrapv1.EtcdadmConfig{}).
+		Build()
 
 	k := &EtcdadmConfigReconciler{
 		Log:             log.Log,
@@ -550,7 +574,11 @@ func TestEtcdadmConfigReconciler_JoinMemberIfEtcdIsInitialized_Bottlerocket(t *t
 		etcdCASecret,
 		config,
 	}
-	myclient := fake.NewClientBuilder().WithScheme(setupScheme()).WithObjects(objects...).Build()
+	myclient := fake.NewClientBuilder().
+		WithScheme(setupScheme()).
+		WithObjects(objects...).
+		WithStatusSubresource(&etcdbootstrapv1.EtcdadmConfig{}).
+		Build()
 
 	k := &EtcdadmConfigReconciler{
 		Log:             log.Log,
@@ -604,7 +632,11 @@ func TestEtcdadmConfigReconciler_JoinMemberIfEtcdIsInitialized_EtcdInitSecretOld
 		etcdCASecret,
 		config,
 	}
-	myclient := fake.NewClientBuilder().WithScheme(setupScheme()).WithObjects(objects...).Build()
+	myclient := fake.NewClientBuilder().
+		WithScheme(setupScheme()).
+		WithObjects(objects...).
+		WithStatusSubresource(&etcdbootstrapv1.EtcdadmConfig{}).
+		Build()
 
 	k := &EtcdadmConfigReconciler{
 		Log:             log.Log,

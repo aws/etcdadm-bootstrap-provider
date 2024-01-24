@@ -89,7 +89,7 @@ func (r *EtcdadmConfigReconciler) SetupWithManager(ctx context.Context, mgr ctrl
 		For(&etcdbootstrapv1.EtcdadmConfig{}).
 		WithEventFilter(predicates.ResourceNotPaused(r.Log)).
 		Watches(
-			&source.Kind{Type: &clusterv1.Machine{}},
+			&clusterv1.Machine{},
 			handler.EnqueueRequestsFromMapFunc(r.MachineToBootstrapMapFunc),
 		)
 
@@ -99,7 +99,7 @@ func (r *EtcdadmConfigReconciler) SetupWithManager(ctx context.Context, mgr ctrl
 	}
 
 	err = c.Watch(
-		&source.Kind{Type: &clusterv1.Cluster{}},
+		source.Kind(mgr.GetCache(), &clusterv1.Cluster{}),
 		handler.EnqueueRequestsFromMapFunc(r.ClusterToEtcdadmConfigs),
 		predicates.ClusterUnpausedAndInfrastructureReady(r.Log),
 	)

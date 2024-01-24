@@ -12,7 +12,7 @@ import (
 
 // MachineToBootstrapMapFunc is a handler.ToRequestsFunc to be used to enqueue
 // requests for reconciliation of EtcdadmConfig.
-func (r *EtcdadmConfigReconciler) MachineToBootstrapMapFunc(o client.Object) []ctrl.Request {
+func (r *EtcdadmConfigReconciler) MachineToBootstrapMapFunc(ctx context.Context, o client.Object) []ctrl.Request {
 	var result []ctrl.Request
 
 	m, ok := o.(*clusterv1.Machine)
@@ -29,7 +29,7 @@ func (r *EtcdadmConfigReconciler) MachineToBootstrapMapFunc(o client.Object) []c
 
 // ClusterToEtcdadmConfigs is a handler.ToRequestsFunc to be used to enqeue
 // requests for reconciliation of EtcdadmConfigs.
-func (r *EtcdadmConfigReconciler) ClusterToEtcdadmConfigs(o client.Object) []ctrl.Request {
+func (r *EtcdadmConfigReconciler) ClusterToEtcdadmConfigs(ctx context.Context, o client.Object) []ctrl.Request {
 	var result []ctrl.Request
 
 	c, ok := o.(*clusterv1.Cluster)
