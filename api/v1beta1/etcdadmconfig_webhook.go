@@ -21,6 +21,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
 // log is for logging in this package.
@@ -49,25 +50,25 @@ func (r *EtcdadmConfig) Default() {
 var _ webhook.Validator = &EtcdadmConfig{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *EtcdadmConfig) ValidateCreate() error {
+func (r *EtcdadmConfig) ValidateCreate() (admission.Warnings, error) {
 	etcdadmconfiglog.Info("validate create", "name", r.Name)
 
 	// TODO(user): fill in your validation logic upon object creation.
-	return nil
+	return nil, nil
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *EtcdadmConfig) ValidateUpdate(old runtime.Object) error {
+func (r *EtcdadmConfig) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
 	etcdadmconfiglog.Info("validate update", "name", r.Name)
 
 	// TODO(user): fill in your validation logic upon object update.
-	return nil
+	return nil, nil
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *EtcdadmConfig) ValidateDelete() error {
+func (r *EtcdadmConfig) ValidateDelete() (admission.Warnings, error) {
 	etcdadmconfiglog.Info("validate delete", "name", r.Name)
 
 	// TODO(user): fill in your validation logic upon object deletion.
-	return nil
+	return nil, nil
 }

@@ -17,8 +17,8 @@ limitations under the License.
 package v1alpha3
 
 import (
+	clusterv1 "github.com/aws/etcdadm-bootstrap-provider/internal/api/v1alpha3" // nolint
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha3" // nolint
 	capbk "sigs.k8s.io/cluster-api/bootstrap/kubeadm/api/v1beta1"
 )
 

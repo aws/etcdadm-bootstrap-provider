@@ -12,7 +12,7 @@ import (
 
 // MachineToBootstrapMapFunc is a handler.ToRequestsFunc to be used to enqueue
 // requests for reconciliation of EtcdadmConfig.
-func (r *EtcdadmConfigReconciler) MachineToBootstrapMapFunc(o client.Object) []ctrl.Request {
+func (r *EtcdadmConfigReconciler) MachineToBootstrapMapFunc(ctx context.Context, o client.Object) []ctrl.Request {
 	var result []ctrl.Request
 
 	m, ok := o.(*clusterv1.Machine)
@@ -29,7 +29,7 @@ func (r *EtcdadmConfigReconciler) MachineToBootstrapMapFunc(o client.Object) []c
 
 // ClusterToEtcdadmConfigs is a handler.ToRequestsFunc to be used to enqeue
 // requests for reconciliation of EtcdadmConfigs.
-func (r *EtcdadmConfigReconciler) ClusterToEtcdadmConfigs(o client.Object) []ctrl.Request {
+func (r *EtcdadmConfigReconciler) ClusterToEtcdadmConfigs(ctx context.Context, o client.Object) []ctrl.Request {
 	var result []ctrl.Request
 
 	c, ok := o.(*clusterv1.Cluster)
@@ -46,7 +46,7 @@ func (r *EtcdadmConfigReconciler) ClusterToEtcdadmConfigs(o client.Object) []ctr
 	}
 
 	machineList := &clusterv1.MachineList{}
-	if err := r.Client.List(context.Background(), machineList, selectors...); err != nil {
+	if err := r.Client.List(ctx, machineList, selectors...); err != nil {
 		r.Log.Error(err, "failed to list Machines", "Cluster", c.Name, "Namespace", c.Namespace)
 		return nil
 	}
