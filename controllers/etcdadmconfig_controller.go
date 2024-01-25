@@ -35,7 +35,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	bootstrapv1 "sigs.k8s.io/cluster-api/bootstrap/kubeadm/api/v1beta1"
 	"sigs.k8s.io/cluster-api/util"
@@ -45,9 +45,9 @@ import (
 	"sigs.k8s.io/cluster-api/util/predicates"
 	"sigs.k8s.io/cluster-api/util/secret"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
 const stopKubeletCommand = "systemctl stop kubelet"
@@ -85,27 +85,23 @@ func (r *EtcdadmConfigReconciler) SetupWithManager(ctx context.Context, mgr ctrl
 		r.EtcdadmInitLock = locking.NewEtcdadmInitMutex(ctrl.LoggerFrom(ctx).WithName("etcd-init-locker"), mgr.GetClient())
 	}
 
-	b := ctrl.NewControllerManagedBy(mgr).
+	err := ctrl.NewControllerManagedBy(mgr).
 		For(&etcdbootstrapv1.EtcdadmConfig{}).
 		WithEventFilter(predicates.ResourceNotPaused(r.Log)).
 		Watches(
 			&clusterv1.Machine{},
 			handler.EnqueueRequestsFromMapFunc(r.MachineToBootstrapMapFunc),
-		)
+		).
+		Watches(
+			&clusterv1.Cluster{},
+			handler.EnqueueRequestsFromMapFunc(r.ClusterToEtcdadmConfigs),
+			builder.WithPredicates(predicates.ClusterUnpausedAndInfrastructureReady(r.Log)),
+		).Complete(r)
 
-	c, err := b.Build(r)
 	if err != nil {
 		return errors.Wrap(err, "failed setting up with a controller manager")
 	}
 
-	err = c.Watch(
-		source.Kind(mgr.GetCache(), &clusterv1.Cluster{}),
-		handler.EnqueueRequestsFromMapFunc(r.ClusterToEtcdadmConfigs),
-		predicates.ClusterUnpausedAndInfrastructureReady(r.Log),
-	)
-	if err != nil {
-		return errors.Wrap(err, "failed adding Watch for Clusters to controller manager")
-	}
 	return nil
 }
 
@@ -404,7 +400,7 @@ func (r *EtcdadmConfigReconciler) storeBootstrapData(ctx context.Context, config
 					Kind:       config.Kind,
 					Name:       config.Name,
 					UID:        config.UID,
-					Controller: pointer.Bool(true),
+					Controller: ptr.To(true),
 				},
 			},
 		},
@@ -425,7 +421,7 @@ func (r *EtcdadmConfigReconciler) storeBootstrapData(ctx context.Context, config
 			return errors.Wrapf(err, "failed to update bootstrap data secret for EtcdadmConfig %s/%s", config.Namespace, config.Name)
 		}
 	}
-	config.Status.DataSecretName = pointer.String(se.Name)
+	config.Status.DataSecretName = ptr.To(se.Name)
 	config.Status.Ready = true
 	conditions.MarkTrue(config, bootstrapv1.DataSecretAvailableCondition)
 	return nil

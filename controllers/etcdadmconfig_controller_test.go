@@ -6,13 +6,12 @@ import (
 	"testing"
 	"time"
 
-	"k8s.io/utils/pointer"
-
 	etcdbootstrapv1 "github.com/aws/etcdadm-bootstrap-provider/api/v1beta1"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/utils/ptr"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/cluster-api/util/conditions"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -358,7 +357,7 @@ func TestEtcdadmConfigBootstrapDataSecretCreatedStatusNotPatched(t *testing.T) {
 					Kind:       config.Kind,
 					Name:       config.Name,
 					UID:        config.UID,
-					Controller: pointer.Bool(true),
+					Controller: ptr.To(true),
 				},
 			},
 		},

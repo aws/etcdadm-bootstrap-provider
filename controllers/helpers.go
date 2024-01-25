@@ -46,7 +46,7 @@ func (r *EtcdadmConfigReconciler) ClusterToEtcdadmConfigs(ctx context.Context, o
 	}
 
 	machineList := &clusterv1.MachineList{}
-	if err := r.Client.List(context.Background(), machineList, selectors...); err != nil {
+	if err := r.Client.List(ctx, machineList, selectors...); err != nil {
 		r.Log.Error(err, "failed to list Machines", "Cluster", c.Name, "Namespace", c.Namespace)
 		return nil
 	}
