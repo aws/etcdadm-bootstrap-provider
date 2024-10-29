@@ -14,7 +14,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-const semaphoreInformationKey = "lock-information"
+const (
+	semaphoreInformationKey = "lock-information"
+	eksaSystemNamespace     = "eksa-system"
+)
 
 // EtcdadmInitMutex uses a ConfigMap to synchronize cluster initialization.
 type EtcdadmInitMutex struct {
@@ -55,6 +58,31 @@ func (c *EtcdadmInitMutex) Lock(ctx context.Context, cluster *clusterv1.Cluster,
 		if info.MachineName == machine.Name {
 			return true
 		}
+
+		machine := &clusterv1.Machine{}
+
+		err = c.client.Get(ctx, client.ObjectKey{
+			Namespace: eksaSystemNamespace,
+			Name:      info.MachineName,
+		}, machine)
+		if err != nil {
+			// Release the lock if for some reason the machine that acquired the lock
+			// failed to launch due to a catastrophic event
+			//
+			// without this check we might end up with a deadlock.
+			if apierrors.IsNotFound(err) {
+				log.Info("Machine that has acquired the lock not found, releasing the lock", "init-machine", info.MachineName)
+				if c.Unlock(ctx, cluster) {
+					break
+				} else {
+					return false
+				}
+			} else {
+				log.Error(err, "Failed to retreive machine", "machine", info.MachineName)
+				return false
+			}
+		}
+
 		log.Info("Waiting on another machine to initialize", "init-machine", info.MachineName)
 		return false
 	}
