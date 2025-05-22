@@ -17,6 +17,9 @@ limitations under the License.
 package v1beta1
 
 import (
+	"context"
+	"fmt"
+
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -30,44 +33,67 @@ var etcdadmconfiglog = logf.Log.WithName("etcdadmconfig-resource")
 func (r *EtcdadmConfig) SetupWebhookWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewWebhookManagedBy(mgr).
 		For(r).
+		WithDefaulter(r).
+		WithValidator(r).
 		Complete()
 }
 
 // +kubebuilder:webhook:path=/mutate-bootstrap-cluster-x-k8s-io-v1beta1-etcdadmconfig,mutating=true,failurePolicy=fail,groups=bootstrap.cluster.x-k8s.io,resources=etcdadmconfigs,verbs=create;update,versions=v1beta1,name=metcdadmconfig.kb.io,sideEffects=None,admissionReviewVersions=v1;v1beta1
 
-var _ webhook.Defaulter = &EtcdadmConfig{}
+var _ webhook.CustomDefaulter = &EtcdadmConfig{}
 
-// Default implements webhook.Defaulter so a webhook will be registered for the type
-func (r *EtcdadmConfig) Default() {
-	etcdadmconfiglog.Info("default", "name", r.Name)
+// Default implements webhook.CustomDefaulter so a webhook will be registered for the type
+func (r *EtcdadmConfig) Default(_ context.Context, obj runtime.Object) error {
+	etcdadmConfig, ok := obj.(*EtcdadmConfig)
+	if !ok {
+		return fmt.Errorf("expected an EtcdadmConfig but got %T", obj)
+	}
+
+	etcdadmconfiglog.Info("default", "name", etcdadmConfig.Name)
 
 	// TODO(user): fill in your defaulting logic.
+	return nil
 }
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
 // +kubebuilder:webhook:verbs=create;update,path=/validate-bootstrap-cluster-x-k8s-io-v1beta1-etcdadmconfig,mutating=false,failurePolicy=fail,groups=bootstrap.cluster.x-k8s.io,resources=etcdadmconfigs,versions=v1beta1,name=vetcdadmconfig.kb.io,sideEffects=None,admissionReviewVersions=v1;v1beta1
 
-var _ webhook.Validator = &EtcdadmConfig{}
+var _ webhook.CustomValidator = &EtcdadmConfig{}
 
-// ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *EtcdadmConfig) ValidateCreate() (admission.Warnings, error) {
-	etcdadmconfiglog.Info("validate create", "name", r.Name)
+// ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type
+func (r *EtcdadmConfig) ValidateCreate(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
+	etcdadmConfig, ok := obj.(*EtcdadmConfig)
+	if !ok {
+		return nil, fmt.Errorf("expected an EtcdadmConfig but got %T", obj)
+	}
+
+	etcdadmconfiglog.Info("validate create", "name", etcdadmConfig.Name)
 
 	// TODO(user): fill in your validation logic upon object creation.
 	return nil, nil
 }
 
-// ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *EtcdadmConfig) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
-	etcdadmconfiglog.Info("validate update", "name", r.Name)
+// ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type
+func (r *EtcdadmConfig) ValidateUpdate(_ context.Context, old, obj runtime.Object) (admission.Warnings, error) {
+	etcdadmConfig, ok := obj.(*EtcdadmConfig)
+	if !ok {
+		return nil, fmt.Errorf("expected an EtcdadmConfig but got %T", obj)
+	}
+
+	etcdadmconfiglog.Info("validate update", "name", etcdadmConfig.Name)
 
 	// TODO(user): fill in your validation logic upon object update.
 	return nil, nil
 }
 
-// ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *EtcdadmConfig) ValidateDelete() (admission.Warnings, error) {
-	etcdadmconfiglog.Info("validate delete", "name", r.Name)
+// ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type
+func (r *EtcdadmConfig) ValidateDelete(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
+	etcdadmConfig, ok := obj.(*EtcdadmConfig)
+	if !ok {
+		return nil, fmt.Errorf("expected an EtcdadmConfig but got %T", obj)
+	}
+
+	etcdadmconfiglog.Info("validate delete", "name", etcdadmConfig.Name)
 
 	// TODO(user): fill in your validation logic upon object deletion.
 	return nil, nil
