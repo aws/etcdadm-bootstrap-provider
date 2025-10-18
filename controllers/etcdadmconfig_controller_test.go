@@ -12,8 +12,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/utils/ptr"
-	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
+	clusterv1 "sigs.k8s.io/cluster-api/api/core/v1beta2"
 	"sigs.k8s.io/cluster-api/util/conditions"
+	v1beta1conditions "sigs.k8s.io/cluster-api/util/deprecated/v1beta1/conditions"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -204,7 +205,7 @@ func TestEtcdadmConfigReconciler_Reconcile_ReturnEarlyIfClusterIsPaused(t *testi
 	g := NewWithT(t)
 
 	cluster := newCluster("external-etcd-cluster")
-	cluster.Spec.Paused = true
+	cluster.Spec.Paused = ptr.To(true)
 	machine := newMachine(cluster, "machine")
 	config := newEtcdadmConfig(machine, "etcdadmConfig", etcdbootstrapv1.CloudConfig)
 
@@ -267,7 +268,7 @@ func TestEtcdadmConfigReconciler_InitializeEtcdIfInitLockIsNotAquired_Cloudinit(
 
 	configKey := client.ObjectKeyFromObject(config)
 	g.Expect(myclient.Get(context.TODO(), configKey, config)).To(Succeed())
-	c := conditions.Get(config, etcdbootstrapv1.DataSecretAvailableCondition)
+	c := v1beta1conditions.Get(config, etcdbootstrapv1.DataSecretAvailableCondition)
 	g.Expect(c).ToNot(BeNil())
 	g.Expect(c.Status).To(Equal(corev1.ConditionTrue))
 }
@@ -309,7 +310,7 @@ func TestEtcdadmConfigReconciler_InitializeEtcdIfInitLockIsNotAquired_Bottlerock
 
 	configKey := client.ObjectKeyFromObject(config)
 	g.Expect(myclient.Get(context.TODO(), configKey, config)).To(Succeed())
-	c := conditions.Get(config, etcdbootstrapv1.DataSecretAvailableCondition)
+	c := v1beta1conditions.Get(config, etcdbootstrapv1.DataSecretAvailableCondition)
 	g.Expect(c).ToNot(BeNil())
 	g.Expect(c.Status).To(Equal(corev1.ConditionTrue))
 }
@@ -375,7 +376,7 @@ func TestEtcdadmConfigBootstrapDataSecretCreatedStatusNotPatched(t *testing.T) {
 
 	configKey := client.ObjectKeyFromObject(config)
 	g.Expect(myclient.Get(context.TODO(), configKey, config)).To(Succeed())
-	c := conditions.Get(config, etcdbootstrapv1.DataSecretAvailableCondition)
+	c := v1beta1conditions.Get(config, etcdbootstrapv1.DataSecretAvailableCondition)
 	g.Expect(c).ToNot(BeNil())
 	g.Expect(c.Status).To(Equal(corev1.ConditionTrue))
 }
@@ -417,7 +418,7 @@ func TestEtcdadmConfigReconciler_PreEtcdadmCommandsWhenEtcdadmNotBuiltin(t *test
 
 	configKey := client.ObjectKeyFromObject(config)
 	g.Expect(myclient.Get(context.TODO(), configKey, config)).To(Succeed())
-	c := conditions.Get(config, etcdbootstrapv1.DataSecretAvailableCondition)
+	c := v1beta1conditions.Get(config, etcdbootstrapv1.DataSecretAvailableCondition)
 	g.Expect(c).ToNot(BeNil())
 	g.Expect(c.Status).To(Equal(corev1.ConditionTrue))
 }
@@ -456,7 +457,7 @@ func TestEtcdadmConfigReconciler_RequeueIfInitLockIsAquired(t *testing.T) {
 	g.Expect(err).NotTo(HaveOccurred())
 	g.Expect(result.Requeue).To(BeFalse())
 	g.Expect(result.RequeueAfter).To(Equal(30 * time.Second))
-	c := conditions.Get(config, etcdbootstrapv1.DataSecretAvailableCondition)
+	c := v1beta1conditions.Get(config, etcdbootstrapv1.DataSecretAvailableCondition)
 	g.Expect(c).To(BeNil())
 }
 
@@ -465,7 +466,10 @@ func TestEtcdadmConfigReconciler_JoinMemberInitSecretNotReady(t *testing.T) {
 
 	cluster := newCluster("external-etcd-cluster")
 	cluster.Status.ManagedExternalEtcdInitialized = true
-	conditions.MarkTrue(cluster, clusterv1.ManagedExternalEtcdClusterInitializedCondition)
+	conditions.Set(cluster, metav1.Condition{
+		Type:   string(clusterv1.ManagedExternalEtcdClusterInitializedCondition),
+		Status: metav1.ConditionTrue,
+	})
 	machine := newMachine(cluster, "machine")
 	config := newEtcdadmConfig(machine, "etcdadmConfig", etcdbootstrapv1.CloudConfig)
 
@@ -498,7 +502,10 @@ func TestEtcdadmConfigReconciler_JoinMemberIfEtcdIsInitialized_CloudInit(t *test
 
 	cluster := newCluster("external-etcd-cluster")
 	cluster.Status.ManagedExternalEtcdInitialized = true
-	conditions.MarkTrue(cluster, clusterv1.ManagedExternalEtcdClusterInitializedCondition)
+	conditions.Set(cluster, metav1.Condition{
+		Type:   string(clusterv1.ManagedExternalEtcdClusterInitializedCondition),
+		Status: metav1.ConditionTrue,
+	})
 	etcdInitSecret := newEtcdInitSecret(cluster)
 
 	machine := newMachine(cluster, "machine")
@@ -539,7 +546,7 @@ func TestEtcdadmConfigReconciler_JoinMemberIfEtcdIsInitialized_CloudInit(t *test
 
 	configKey := client.ObjectKeyFromObject(config)
 	g.Expect(myclient.Get(context.TODO(), configKey, config)).To(Succeed())
-	c := conditions.Get(config, etcdbootstrapv1.DataSecretAvailableCondition)
+	c := v1beta1conditions.Get(config, etcdbootstrapv1.DataSecretAvailableCondition)
 	g.Expect(c).ToNot(BeNil())
 	g.Expect(c.Status).To(Equal(corev1.ConditionTrue))
 
@@ -556,7 +563,10 @@ func TestEtcdadmConfigReconciler_JoinMemberIfEtcdIsInitialized_Bottlerocket(t *t
 
 	cluster := newCluster("external-etcd-cluster")
 	cluster.Status.ManagedExternalEtcdInitialized = true
-	conditions.MarkTrue(cluster, clusterv1.ManagedExternalEtcdClusterInitializedCondition)
+	conditions.Set(cluster, metav1.Condition{
+		Type:   string(clusterv1.ManagedExternalEtcdClusterInitializedCondition),
+		Status: metav1.ConditionTrue,
+	})
 	etcdInitSecret := newEtcdInitSecret(cluster)
 
 	machine := newMachine(cluster, "machine")
@@ -597,7 +607,7 @@ func TestEtcdadmConfigReconciler_JoinMemberIfEtcdIsInitialized_Bottlerocket(t *t
 
 	configKey := client.ObjectKeyFromObject(config)
 	g.Expect(myclient.Get(context.TODO(), configKey, config)).To(Succeed())
-	c := conditions.Get(config, etcdbootstrapv1.DataSecretAvailableCondition)
+	c := v1beta1conditions.Get(config, etcdbootstrapv1.DataSecretAvailableCondition)
 	g.Expect(c).ToNot(BeNil())
 	g.Expect(c.Status).To(Equal(corev1.ConditionTrue))
 
@@ -613,7 +623,10 @@ func TestEtcdadmConfigReconciler_JoinMemberIfEtcdIsInitialized_EtcdInitSecretOld
 
 	cluster := newCluster("external-etcd-cluster")
 	cluster.Status.ManagedExternalEtcdInitialized = true
-	conditions.MarkTrue(cluster, clusterv1.ManagedExternalEtcdClusterInitializedCondition)
+	conditions.Set(cluster, metav1.Condition{
+		Type:   string(clusterv1.ManagedExternalEtcdClusterInitializedCondition),
+		Status: metav1.ConditionTrue,
+	})
 	etcdInitSecret := newEtcdInitSecret(cluster)
 	etcdInitSecret.Data = map[string][]byte{"address": []byte("1.2.3.4")}
 	machine := newMachine(cluster, "machine")
@@ -655,7 +668,7 @@ func TestEtcdadmConfigReconciler_JoinMemberIfEtcdIsInitialized_EtcdInitSecretOld
 
 	configKey := client.ObjectKeyFromObject(config)
 	g.Expect(myclient.Get(context.TODO(), configKey, config)).To(Succeed())
-	c := conditions.Get(config, etcdbootstrapv1.DataSecretAvailableCondition)
+	c := v1beta1conditions.Get(config, etcdbootstrapv1.DataSecretAvailableCondition)
 	g.Expect(c).ToNot(BeNil())
 	g.Expect(c.Status).To(Equal(corev1.ConditionTrue))
 
@@ -696,9 +709,8 @@ func newMachine(cluster *clusterv1.Cluster, name string) *clusterv1.Machine {
 		},
 		Spec: clusterv1.MachineSpec{
 			Bootstrap: clusterv1.Bootstrap{
-				ConfigRef: &corev1.ObjectReference{
-					Kind:       "EtcdadmConfig",
-					APIVersion: etcdbootstrapv1.GroupVersion.String(),
+				ConfigRef: clusterv1.ContractVersionedObjectReference{
+					Kind: "EtcdadmConfig",
 				},
 			},
 		},
@@ -746,7 +758,6 @@ func newEtcdadmConfig(machine *clusterv1.Machine, name string, format etcdbootst
 			},
 		}
 		machine.Spec.Bootstrap.ConfigRef.Name = config.Name
-		machine.Spec.Bootstrap.ConfigRef.Namespace = config.Namespace
 	}
 	return config
 }

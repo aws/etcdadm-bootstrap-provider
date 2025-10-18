@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	bootstrapv1 "sigs.k8s.io/cluster-api/bootstrap/kubeadm/api/v1beta1"
+	bootstrapv1 "sigs.k8s.io/cluster-api/api/bootstrap/kubeadm/v1beta1"
+	bootstrapv2 "sigs.k8s.io/cluster-api/api/bootstrap/kubeadm/v1beta2"
 	"sigs.k8s.io/cluster-api/util/secret"
 )
 
@@ -82,4 +83,24 @@ func AddSystemdArgsToCommand(cmd string, args *EtcdadmArgs) string {
 	fullCommand = append(fullCommand, flags...)
 
 	return strings.Join(fullCommand, " ")
+}
+
+// ConvertCertificateFiles converts v1beta2.File slice to v1beta1.File slice using cluster-api conversion
+func ConvertCertificateFiles(v2Files []bootstrapv2.File) []bootstrapv1.File {
+	v1Files := make([]bootstrapv1.File, len(v2Files))
+	for i, v2File := range v2Files {
+		// Use cluster-api's built-in conversion function
+		if err := bootstrapv1.Convert_v1beta2_File_To_v1beta1_File(&v2File, &v1Files[i], nil); err != nil {
+			// Fallback to manual conversion if the built-in conversion fails
+			v1Files[i] = bootstrapv1.File{
+				Path:        v2File.Path,
+				Owner:       v2File.Owner,
+				Permissions: v2File.Permissions,
+				Encoding:    bootstrapv1.Encoding(v2File.Encoding),
+				Content:     v2File.Content,
+				// ContentFrom conversion is handled by the built-in conversion function
+			}
+		}
+	}
+	return v1Files
 }
