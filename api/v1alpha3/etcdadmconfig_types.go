@@ -19,7 +19,7 @@ package v1alpha3
 import (
 	clusterv1 "github.com/aws/etcdadm-bootstrap-provider/internal/api/v1alpha3" // nolint
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	capbk "sigs.k8s.io/cluster-api/bootstrap/kubeadm/api/v1beta1"
+	capbk "sigs.k8s.io/cluster-api/api/bootstrap/kubeadm/v1beta1"
 )
 
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.

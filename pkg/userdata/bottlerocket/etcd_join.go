@@ -22,7 +22,7 @@ runcmd: "{{ .EtcdadmJoinCommand }}"
 
 // NewJoinControlPlane returns the user data string to be used on a new control plane instance.
 func NewJoinEtcdPlane(input *userdata.EtcdPlaneJoinInput, config etcdbootstrapv1.EtcdadmConfigSpec, log logr.Logger) ([]byte, error) {
-	input.WriteFiles = input.Certificates.AsFiles()
+	input.WriteFiles = userdata.ConvertCertificateFiles(input.Certificates.AsFiles())
 	prepare(&input.BaseUserData)
 	input.EtcdadmArgs = buildEtcdadmArgs(config)
 	logIgnoredFields(&input.BaseUserData, log)

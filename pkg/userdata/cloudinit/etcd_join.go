@@ -29,7 +29,7 @@ runcmd:
 
 // NewJoinControlPlane returns the user data string to be used on a new control plane instance.
 func NewJoinEtcdPlane(input *userdata.EtcdPlaneJoinInput, config etcdbootstrapv1.EtcdadmConfigSpec) ([]byte, error) {
-	input.WriteFiles = input.Certificates.AsFiles()
+	input.WriteFiles = userdata.ConvertCertificateFiles(input.AsFiles())
 	input.EtcdadmArgs = buildEtcdadmArgs(config)
 	input.EtcdadmJoinCommand = userdata.AddSystemdArgsToCommand(fmt.Sprintf(standardJoinCommand, input.JoinAddress), &input.EtcdadmArgs)
 	if err := setProxy(config.Proxy, &input.BaseUserData); err != nil {

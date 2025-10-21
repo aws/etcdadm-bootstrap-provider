@@ -19,7 +19,7 @@ runcmd: "{{ .EtcdadmInitCommand }}"
 
 // NewInitEtcdPlane returns the user data string to be used on a etcd instance.
 func NewInitEtcdPlane(input *userdata.EtcdPlaneInput, config etcdbootstrapv1.EtcdadmConfigSpec, log logr.Logger) ([]byte, error) {
-	input.WriteFiles = input.Certificates.AsFiles()
+	input.WriteFiles = userdata.ConvertCertificateFiles(input.AsFiles())
 	prepare(&input.BaseUserData)
 	input.EtcdadmArgs = buildEtcdadmArgs(config)
 	logIgnoredFields(&input.BaseUserData, log)

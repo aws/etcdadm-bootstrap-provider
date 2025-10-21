@@ -27,8 +27,8 @@ import (
 	apiv1alpha3 "github.com/aws/etcdadm-bootstrap-provider/internal/api/v1alpha3"
 	conversion "k8s.io/apimachinery/pkg/conversion"
 	runtime "k8s.io/apimachinery/pkg/runtime"
-	clusterapiapiv1beta1 "sigs.k8s.io/cluster-api/api/v1beta1"
-	apiv1beta1 "sigs.k8s.io/cluster-api/bootstrap/kubeadm/api/v1beta1"
+	apiv1beta1 "sigs.k8s.io/cluster-api/api/bootstrap/kubeadm/v1beta1"
+	clusterapiapiv1beta1 "sigs.k8s.io/cluster-api/api/core/v1beta1"
 )
 
 func init() {

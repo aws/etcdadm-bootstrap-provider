@@ -36,12 +36,13 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/utils/ptr"
-	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
-	bootstrapv1 "sigs.k8s.io/cluster-api/bootstrap/kubeadm/api/v1beta1"
+	bootstrapv1 "sigs.k8s.io/cluster-api/api/bootstrap/kubeadm/v1beta1"
+	clusterv1 "sigs.k8s.io/cluster-api/api/core/v1beta2"
 	"sigs.k8s.io/cluster-api/util"
 	"sigs.k8s.io/cluster-api/util/annotations"
 	"sigs.k8s.io/cluster-api/util/conditions"
-	"sigs.k8s.io/cluster-api/util/patch"
+	v1beta1conditions "sigs.k8s.io/cluster-api/util/deprecated/v1beta1/conditions"
+	v1beta1patch "sigs.k8s.io/cluster-api/util/deprecated/v1beta1/patch"
 	"sigs.k8s.io/cluster-api/util/predicates"
 	"sigs.k8s.io/cluster-api/util/secret"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -87,7 +88,7 @@ func (r *EtcdadmConfigReconciler) SetupWithManager(ctx context.Context, mgr ctrl
 
 	err := ctrl.NewControllerManagedBy(mgr).
 		For(&etcdbootstrapv1.EtcdadmConfig{}).
-		WithEventFilter(predicates.ResourceNotPaused(r.Log)).
+		WithEventFilter(predicates.ResourceNotPaused(r.Scheme, r.Log)).
 		Watches(
 			&clusterv1.Machine{},
 			handler.EnqueueRequestsFromMapFunc(r.MachineToBootstrapMapFunc),
@@ -95,7 +96,7 @@ func (r *EtcdadmConfigReconciler) SetupWithManager(ctx context.Context, mgr ctrl
 		Watches(
 			&clusterv1.Cluster{},
 			handler.EnqueueRequestsFromMapFunc(r.ClusterToEtcdadmConfigs),
-			builder.WithPredicates(predicates.ClusterUnpausedAndInfrastructureReady(r.Log)),
+			builder.WithPredicates(predicates.ClusterUnpausedAndInfrastructureProvisioned(r.Scheme, r.Log)),
 		).Complete(r)
 
 	if err != nil {
@@ -158,7 +159,7 @@ func (r *EtcdadmConfigReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		return ctrl.Result{}, nil
 	}
 	// Initialize the patch helper.
-	patchHelper, err := patch.NewHelper(etcdadmConfig, r.Client)
+	patchHelper, err := v1beta1patch.NewHelper(etcdadmConfig, r.Client)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
@@ -166,15 +167,15 @@ func (r *EtcdadmConfigReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	// Attempt to Patch the EtcdadmConfig object and status after each reconciliation if no error occurs.
 	defer func() {
 		// always update the readyCondition; the summary is represented using the "1 of x completed" notation.
-		conditions.SetSummary(etcdadmConfig,
-			conditions.WithConditions(
+		v1beta1conditions.SetSummary(etcdadmConfig,
+			v1beta1conditions.WithConditions(
 				etcdbootstrapv1.DataSecretAvailableCondition,
 			),
 		)
 		// Patch ObservedGeneration only if the reconciliation completed successfully
-		patchOpts := []patch.Option{}
+		patchOpts := []v1beta1patch.Option{}
 		if rerr == nil {
-			patchOpts = append(patchOpts, patch.WithStatusObservedGeneration{})
+			patchOpts = append(patchOpts, v1beta1patch.WithStatusObservedGeneration{})
 		}
 		if err := patchHelper.Patch(ctx, etcdadmConfig, patchOpts...); err != nil {
 			log.Error(err, "Failed to patch etcdadmConfig")
@@ -195,7 +196,7 @@ func (r *EtcdadmConfigReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		Machine: machine,
 	}
 
-	if !conditions.IsTrue(cluster, clusterv1.ManagedExternalEtcdClusterInitializedCondition) {
+	if !conditions.IsTrue(cluster, string(clusterv1.ManagedExternalEtcdClusterInitializedCondition)) {
 		return r.initializeEtcd(ctx, &scope)
 	}
 	// Unlock any locks that might have been set during init process
@@ -423,7 +424,7 @@ func (r *EtcdadmConfigReconciler) storeBootstrapData(ctx context.Context, config
 	}
 	config.Status.DataSecretName = ptr.To(se.Name)
 	config.Status.Ready = true
-	conditions.MarkTrue(config, bootstrapv1.DataSecretAvailableCondition)
+	v1beta1conditions.MarkTrue(config, bootstrapv1.DataSecretAvailableCondition)
 	return nil
 }
 

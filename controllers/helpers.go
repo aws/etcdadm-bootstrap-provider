@@ -3,9 +3,8 @@ package controllers
 import (
 	"context"
 
-	etcdbootstrapv1 "github.com/aws/etcdadm-bootstrap-provider/api/v1beta1"
 	"github.com/pkg/errors"
-	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
+	clusterv1 "sigs.k8s.io/cluster-api/api/core/v1beta2"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -20,7 +19,7 @@ func (r *EtcdadmConfigReconciler) MachineToBootstrapMapFunc(ctx context.Context,
 		r.Log.Error(errors.Errorf("expected a Machine but got a %T", o.GetObjectKind()), "failed to get EtcdadmConfigs for Machine")
 		return nil
 	}
-	if m.Spec.Bootstrap.ConfigRef != nil && m.Spec.Bootstrap.ConfigRef.GroupVersionKind() == etcdbootstrapv1.GroupVersion.WithKind("EtcdadmConfig") {
+	if m.Spec.Bootstrap.ConfigRef.IsDefined() && m.Spec.Bootstrap.ConfigRef.Kind == "EtcdadmConfig" {
 		name := client.ObjectKey{Namespace: m.Namespace, Name: m.Spec.Bootstrap.ConfigRef.Name}
 		result = append(result, ctrl.Request{NamespacedName: name})
 	}
@@ -52,8 +51,8 @@ func (r *EtcdadmConfigReconciler) ClusterToEtcdadmConfigs(ctx context.Context, o
 	}
 
 	for _, m := range machineList.Items {
-		if m.Spec.Bootstrap.ConfigRef != nil &&
-			m.Spec.Bootstrap.ConfigRef.GroupVersionKind().GroupKind() == etcdbootstrapv1.GroupVersion.WithKind("EtcdadmConfig").GroupKind() {
+		if m.Spec.Bootstrap.ConfigRef.IsDefined() &&
+			m.Spec.Bootstrap.ConfigRef.Kind == "EtcdadmConfig" {
 			name := client.ObjectKey{Namespace: m.Namespace, Name: m.Spec.Bootstrap.ConfigRef.Name}
 			result = append(result, ctrl.Request{NamespacedName: name})
 		}
