@@ -94,7 +94,7 @@ $(TOOLS_BIN_DIR):
 	mkdir -p $(TOOLS_BIN_DIR)
 
 $(CONTROLLER_GEN): $(TOOLS_BIN_DIR) # Build controller-gen from tools folder.
-	GOBIN=$(ABS_TOOLS_BIN_DIR) go install sigs.k8s.io/controller-tools/cmd/controller-gen@v0.11.4
+	GOBIN=$(ABS_TOOLS_BIN_DIR) go install sigs.k8s.io/controller-tools/cmd/controller-gen@v0.16.5
 
 $(CONVERSION_GEN): $(TOOLS_BIN_DIR)
 	GOBIN=$(ABS_TOOLS_BIN_DIR) go install k8s.io/code-generator/cmd/conversion-gen@v0.26.0
