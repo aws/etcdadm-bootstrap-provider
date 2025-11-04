@@ -3,7 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.11.4
+    controller-gen.kubebuilder.io/version: v0.16.5
   name: etcdadmconfigs.bootstrap.cluster.x-k8s.io
 spec:
   group: bootstrap.cluster.x-k8s.io
@@ -20,14 +20,19 @@ spec:
         description: EtcdadmConfig is the Schema for the etcdadmconfigs API
         properties:
           apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
             type: string
           kind:
-            description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
             type: string
           metadata:
             type: object
@@ -68,10 +73,10 @@ spec:
                         container setting for bottlerocket.
                       properties:
                         essential:
-                          description: Essential decides whether or not the container
-                            should fail the boot process. Bootstrap containers configured
-                            with essential = true will stop the boot process if they
-                            exit code is a non-zero value. Default is false.
+                          description: |-
+                            Essential decides whether or not the container should fail the boot process.
+                            Bootstrap containers configured with essential = true will stop the boot process if they exit code is a non-zero value.
+                            Default is false.
                           type: boolean
                         image:
                           description: Image is the actual image used for Bottlerocket
@@ -164,9 +169,9 @@ spec:
                   type: object
                 type: array
               cipherSuites:
-                description: CipherSuites is a list of comma-delimited supported TLS
-                  cipher suites, mapping to the --cipher-suites flag. Default is empty,
-                  which means that they will be auto-populated by Go.
+                description: |-
+                  CipherSuites is a list of comma-delimited supported TLS cipher suites, mapping to the --cipher-suites flag.
+                  Default is empty, which means that they will be auto-populated by Go.
                 type: string
               cloudInitConfig:
                 description: CloudInitConfig specifies the configuration for the cloud-init
@@ -197,27 +202,33 @@ spec:
                     cloud-init.
                   properties:
                     append:
-                      description: Append specifies whether to append Content to existing
+                      description: append specifies whether to append Content to existing
                         file if Path exists.
                       type: boolean
                     content:
-                      description: Content is the actual content of the file.
+                      description: content is the actual content of the file.
+                      maxLength: 10240
+                      minLength: 1
                       type: string
                     contentFrom:
-                      description: ContentFrom is a referenced source of content to
+                      description: contentFrom is a referenced source of content to
                         populate the file.
                       properties:
                         secret:
-                          description: Secret represents a secret that should populate
+                          description: secret represents a secret that should populate
                             this file.
                           properties:
                             key:
-                              description: Key is the key in the secret's data map
+                              description: key is the key in the secret's data map
                                 for this value.
+                              maxLength: 256
+                              minLength: 1
                               type: string
                             name:
-                              description: Name of the secret in the KubeadmBootstrapConfig's
+                              description: name of the secret in the KubeadmBootstrapConfig's
                                 namespace to use.
+                              maxLength: 253
+                              minLength: 1
                               type: string
                           required:
                           - key
@@ -227,23 +238,29 @@ spec:
                       - secret
                       type: object
                     encoding:
-                      description: Encoding specifies the encoding of the file contents.
+                      description: encoding specifies the encoding of the file contents.
                       enum:
                       - base64
                       - gzip
                       - gzip+base64
                       type: string
                     owner:
-                      description: Owner specifies the ownership of the file, e.g.
+                      description: owner specifies the ownership of the file, e.g.
                         "root:root".
+                      maxLength: 256
+                      minLength: 1
                       type: string
                     path:
-                      description: Path specifies the full path on disk where to store
+                      description: path specifies the full path on disk where to store
                         the file.
+                      maxLength: 512
+                      minLength: 1
                       type: string
                     permissions:
-                      description: Permissions specifies the permissions to assign
+                      description: permissions specifies the permissions to assign
                         to the file, e.g. "0640".
+                      maxLength: 16
+                      minLength: 1
                       type: string
                   required:
                   - path
@@ -259,12 +276,15 @@ spec:
                 description: NTP specifies NTP configuration
                 properties:
                   enabled:
-                    description: Enabled specifies whether NTP should be enabled
+                    description: enabled specifies whether NTP should be enabled
                     type: boolean
                   servers:
-                    description: Servers specifies which NTP servers to use
+                    description: servers specifies which NTP servers to use
                     items:
+                      maxLength: 512
+                      minLength: 1
                       type: string
+                    maxItems: 100
                     type: array
                 type: object
               postEtcdadmCommands:
@@ -280,8 +300,9 @@ spec:
                   type: string
                 type: array
               proxy:
-                description: Proxy holds the https and no proxy information This is
-                  only used for bottlerocket
+                description: |-
+                  Proxy holds the https and no proxy information
+                  This is only used for bottlerocket
                 properties:
                   httpProxy:
                     description: HTTP Proxy
@@ -296,7 +317,8 @@ spec:
                     type: array
                 type: object
               registryMirror:
-                description: RegistryMirror holds the image registry mirror information
+                description: |-
+                  RegistryMirror holds the image registry mirror information
                   This is only used for bottlerocket
                 properties:
                   caCert:
@@ -313,45 +335,59 @@ spec:
                   description: User defines the input for a generated user in cloud-init.
                   properties:
                     gecos:
-                      description: Gecos specifies the gecos to use for the user
+                      description: gecos specifies the gecos to use for the user
+                      maxLength: 256
+                      minLength: 1
                       type: string
                     groups:
-                      description: Groups specifies the additional groups for the
+                      description: groups specifies the additional groups for the
                         user
+                      maxLength: 256
+                      minLength: 1
                       type: string
                     homeDir:
-                      description: HomeDir specifies the home directory to use for
+                      description: homeDir specifies the home directory to use for
                         the user
+                      maxLength: 256
+                      minLength: 1
                       type: string
                     inactive:
-                      description: Inactive specifies whether to mark the user as
+                      description: inactive specifies whether to mark the user as
                         inactive
                       type: boolean
                     lockPassword:
-                      description: LockPassword specifies if password login should
+                      description: lockPassword specifies if password login should
                         be disabled
                       type: boolean
                     name:
-                      description: Name specifies the user name
+                      description: name specifies the user name
+                      maxLength: 256
+                      minLength: 1
                       type: string
                     passwd:
-                      description: Passwd specifies a hashed password for the user
+                      description: passwd specifies a hashed password for the user
+                      maxLength: 256
+                      minLength: 1
                       type: string
                     passwdFrom:
-                      description: PasswdFrom is a referenced source of passwd to
+                      description: passwdFrom is a referenced source of passwd to
                         populate the passwd.
                       properties:
                         secret:
-                          description: Secret represents a secret that should populate
+                          description: secret represents a secret that should populate
                             this password.
                           properties:
                             key:
-                              description: Key is the key in the secret's data map
+                              description: key is the key in the secret's data map
                                 for this value.
+                              maxLength: 256
+                              minLength: 1
                               type: string
                             name:
-                              description: Name of the secret in the KubeadmBootstrapConfig's
+                              description: name of the secret in the KubeadmBootstrapConfig's
                                 namespace to use.
+                              maxLength: 253
+                              minLength: 1
                               type: string
                           required:
                           - key
@@ -361,20 +397,29 @@ spec:
                       - secret
                       type: object
                     primaryGroup:
-                      description: PrimaryGroup specifies the primary group for the
+                      description: primaryGroup specifies the primary group for the
                         user
+                      maxLength: 256
+                      minLength: 1
                       type: string
                     shell:
-                      description: Shell specifies the user's shell
+                      description: shell specifies the user's shell
+                      maxLength: 256
+                      minLength: 1
                       type: string
                     sshAuthorizedKeys:
-                      description: SSHAuthorizedKeys specifies a list of ssh authorized
+                      description: sshAuthorizedKeys specifies a list of ssh authorized
                         keys for the user
                       items:
+                        maxLength: 2048
+                        minLength: 1
                         type: string
+                      maxItems: 100
                       type: array
                     sudo:
-                      description: Sudo specifies a sudo role for the user
+                      description: sudo specifies a sudo role for the user
+                      maxLength: 256
+                      minLength: 1
                       type: string
                   required:
                   - name
@@ -391,39 +436,40 @@ spec:
                     operational state.
                   properties:
                     lastTransitionTime:
-                      description: Last time the condition transitioned from one status
-                        to another. This should be when the underlying condition changed.
-                        If that is not known, then using the time when the API field
-                        changed is acceptable.
+                      description: |-
+                        Last time the condition transitioned from one status to another.
+                        This should be when the underlying condition changed. If that is not known, then using the time when
+                        the API field changed is acceptable.
                       format: date-time
                       type: string
                     message:
-                      description: A human readable message indicating details about
-                        the transition. This field may be empty.
+                      description: |-
+                        A human readable message indicating details about the transition.
+                        This field may be empty.
                       type: string
                     reason:
-                      description: The reason for the condition's last transition
-                        in CamelCase. The specific API may choose whether or not this
-                        field is considered a guaranteed API. This field may not be
-                        empty.
+                      description: |-
+                        The reason for the condition's last transition in CamelCase.
+                        The specific API may choose whether or not this field is considered a guaranteed API.
+                        This field may not be empty.
                       type: string
                     severity:
-                      description: Severity provides an explicit classification of
-                        Reason code, so the users or machines can immediately understand
-                        the current situation and act accordingly. The Severity field
-                        MUST be set only when Status=False.
+                      description: |-
+                        Severity provides an explicit classification of Reason code, so the users or machines can immediately
+                        understand the current situation and act accordingly.
+                        The Severity field MUST be set only when Status=False.
                       type: string
                     status:
                       description: Status of the condition, one of True, False, Unknown.
                       type: string
                     type:
-                      description: Type of condition in CamelCase or in foo.example.com/CamelCase.
-                        Many .condition.type values are consistent across resources
-                        like Available, but because arbitrary conditions can be useful
-                        (see .node.status.conditions), the ability to deconflict is
-                        important.
+                      description: |-
+                        Type of condition in CamelCase or in foo.example.com/CamelCase.
+                        Many .condition.type values are consistent across resources like Available, but because arbitrary conditions
+                        can be useful (see .node.status.conditions), the ability to deconflict is important.
                       type: string
                   required:
+                  - lastTransitionTime
                   - status
                   - type
                   type: object
@@ -444,14 +490,19 @@ spec:
         description: EtcdadmConfig is the Schema for the etcdadmconfigs API
         properties:
           apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
             type: string
           kind:
-            description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
             type: string
           metadata:
             type: object
@@ -492,10 +543,10 @@ spec:
                         container setting for bottlerocket.
                       properties:
                         essential:
-                          description: Essential decides whether or not the container
-                            should fail the boot process. Bootstrap containers configured
-                            with essential = true will stop the boot process if they
-                            exit code is a non-zero value. Default is false.
+                          description: |-
+                            Essential decides whether or not the container should fail the boot process.
+                            Bootstrap containers configured with essential = true will stop the boot process if they exit code is a non-zero value.
+                            Default is false.
                           type: boolean
                         image:
                           description: Image is the actual image used for Bottlerocket
@@ -588,9 +639,9 @@ spec:
                   type: object
                 type: array
               cipherSuites:
-                description: CipherSuites is a list of comma-delimited supported TLS
-                  cipher suites, mapping to the --cipher-suites flag. Default is empty,
-                  which means that they will be auto-populated by Go.
+                description: |-
+                  CipherSuites is a list of comma-delimited supported TLS cipher suites, mapping to the --cipher-suites flag.
+                  Default is empty, which means that they will be auto-populated by Go.
                 type: string
               cloudInitConfig:
                 description: CloudInitConfig specifies the configuration for the cloud-init
@@ -621,27 +672,33 @@ spec:
                     cloud-init.
                   properties:
                     append:
-                      description: Append specifies whether to append Content to existing
+                      description: append specifies whether to append Content to existing
                         file if Path exists.
                       type: boolean
                     content:
-                      description: Content is the actual content of the file.
+                      description: content is the actual content of the file.
+                      maxLength: 10240
+                      minLength: 1
                       type: string
                     contentFrom:
-                      description: ContentFrom is a referenced source of content to
+                      description: contentFrom is a referenced source of content to
                         populate the file.
                       properties:
                         secret:
-                          description: Secret represents a secret that should populate
+                          description: secret represents a secret that should populate
                             this file.
                           properties:
                             key:
-                              description: Key is the key in the secret's data map
+                              description: key is the key in the secret's data map
                                 for this value.
+                              maxLength: 256
+                              minLength: 1
                               type: string
                             name:
-                              description: Name of the secret in the KubeadmBootstrapConfig's
+                              description: name of the secret in the KubeadmBootstrapConfig's
                                 namespace to use.
+                              maxLength: 253
+                              minLength: 1
                               type: string
                           required:
                           - key
@@ -651,23 +708,29 @@ spec:
                       - secret
                       type: object
                     encoding:
-                      description: Encoding specifies the encoding of the file contents.
+                      description: encoding specifies the encoding of the file contents.
                       enum:
                       - base64
                       - gzip
                       - gzip+base64
                       type: string
                     owner:
-                      description: Owner specifies the ownership of the file, e.g.
+                      description: owner specifies the ownership of the file, e.g.
                         "root:root".
+                      maxLength: 256
+                      minLength: 1
                       type: string
                     path:
-                      description: Path specifies the full path on disk where to store
+                      description: path specifies the full path on disk where to store
                         the file.
+                      maxLength: 512
+                      minLength: 1
                       type: string
                     permissions:
-                      description: Permissions specifies the permissions to assign
+                      description: permissions specifies the permissions to assign
                         to the file, e.g. "0640".
+                      maxLength: 16
+                      minLength: 1
                       type: string
                   required:
                   - path
@@ -683,12 +746,15 @@ spec:
                 description: NTP specifies NTP configuration
                 properties:
                   enabled:
-                    description: Enabled specifies whether NTP should be enabled
+                    description: enabled specifies whether NTP should be enabled
                     type: boolean
                   servers:
-                    description: Servers specifies which NTP servers to use
+                    description: servers specifies which NTP servers to use
                     items:
+                      maxLength: 512
+                      minLength: 1
                       type: string
+                    maxItems: 100
                     type: array
                 type: object
               postEtcdadmCommands:
@@ -704,8 +770,9 @@ spec:
                   type: string
                 type: array
               proxy:
-                description: Proxy holds the https and no proxy information This is
-                  only used for bottlerocket
+                description: |-
+                  Proxy holds the https and no proxy information
+                  This is only used for bottlerocket
                 properties:
                   httpProxy:
                     description: HTTP Proxy
@@ -720,7 +787,8 @@ spec:
                     type: array
                 type: object
               registryMirror:
-                description: RegistryMirror holds the image registry mirror information
+                description: |-
+                  RegistryMirror holds the image registry mirror information
                   This is only used for bottlerocket
                 properties:
                   caCert:
@@ -737,45 +805,59 @@ spec:
                   description: User defines the input for a generated user in cloud-init.
                   properties:
                     gecos:
-                      description: Gecos specifies the gecos to use for the user
+                      description: gecos specifies the gecos to use for the user
+                      maxLength: 256
+                      minLength: 1
                       type: string
                     groups:
-                      description: Groups specifies the additional groups for the
+                      description: groups specifies the additional groups for the
                         user
+                      maxLength: 256
+                      minLength: 1
                       type: string
                     homeDir:
-                      description: HomeDir specifies the home directory to use for
+                      description: homeDir specifies the home directory to use for
                         the user
+                      maxLength: 256
+                      minLength: 1
                       type: string
                     inactive:
-                      description: Inactive specifies whether to mark the user as
+                      description: inactive specifies whether to mark the user as
                         inactive
                       type: boolean
                     lockPassword:
-                      description: LockPassword specifies if password login should
+                      description: lockPassword specifies if password login should
                         be disabled
                       type: boolean
                     name:
-                      description: Name specifies the user name
+                      description: name specifies the user name
+                      maxLength: 256
+                      minLength: 1
                       type: string
                     passwd:
-                      description: Passwd specifies a hashed password for the user
+                      description: passwd specifies a hashed password for the user
+                      maxLength: 256
+                      minLength: 1
                       type: string
                     passwdFrom:
-                      description: PasswdFrom is a referenced source of passwd to
+                      description: passwdFrom is a referenced source of passwd to
                         populate the passwd.
                       properties:
                         secret:
-                          description: Secret represents a secret that should populate
+                          description: secret represents a secret that should populate
                             this password.
                           properties:
                             key:
-                              description: Key is the key in the secret's data map
+                              description: key is the key in the secret's data map
                                 for this value.
+                              maxLength: 256
+                              minLength: 1
                               type: string
                             name:
-                              description: Name of the secret in the KubeadmBootstrapConfig's
+                              description: name of the secret in the KubeadmBootstrapConfig's
                                 namespace to use.
+                              maxLength: 253
+                              minLength: 1
                               type: string
                           required:
                           - key
@@ -785,20 +867,29 @@ spec:
                       - secret
                       type: object
                     primaryGroup:
-                      description: PrimaryGroup specifies the primary group for the
+                      description: primaryGroup specifies the primary group for the
                         user
+                      maxLength: 256
+                      minLength: 1
                       type: string
                     shell:
-                      description: Shell specifies the user's shell
+                      description: shell specifies the user's shell
+                      maxLength: 256
+                      minLength: 1
                       type: string
                     sshAuthorizedKeys:
-                      description: SSHAuthorizedKeys specifies a list of ssh authorized
+                      description: sshAuthorizedKeys specifies a list of ssh authorized
                         keys for the user
                       items:
+                        maxLength: 2048
+                        minLength: 1
                         type: string
+                      maxItems: 100
                       type: array
                     sudo:
-                      description: Sudo specifies a sudo role for the user
+                      description: sudo specifies a sudo role for the user
+                      maxLength: 256
+                      minLength: 1
                       type: string
                   required:
                   - name
@@ -815,37 +906,44 @@ spec:
                     operational state.
                   properties:
                     lastTransitionTime:
-                      description: Last time the condition transitioned from one status
-                        to another. This should be when the underlying condition changed.
-                        If that is not known, then using the time when the API field
-                        changed is acceptable.
+                      description: |-
+                        lastTransitionTime is the last time the condition transitioned from one status to another.
+                        This should be when the underlying condition changed. If that is not known, then using the time when
+                        the API field changed is acceptable.
                       format: date-time
                       type: string
                     message:
-                      description: A human readable message indicating details about
-                        the transition. This field may be empty.
+                      description: |-
+                        message is a human readable message indicating details about the transition.
+                        This field may be empty.
+                      maxLength: 10240
+                      minLength: 1
                       type: string
                     reason:
-                      description: The reason for the condition's last transition
-                        in CamelCase. The specific API may choose whether or not this
-                        field is considered a guaranteed API. This field may not be
-                        empty.
+                      description: |-
+                        reason is the reason for the condition's last transition in CamelCase.
+                        The specific API may choose whether or not this field is considered a guaranteed API.
+                        This field may be empty.
+                      maxLength: 256
+                      minLength: 1
                       type: string
                     severity:
-                      description: Severity provides an explicit classification of
-                        Reason code, so the users or machines can immediately understand
-                        the current situation and act accordingly. The Severity field
-                        MUST be set only when Status=False.
+                      description: |-
+                        severity provides an explicit classification of Reason code, so the users or machines can immediately
+                        understand the current situation and act accordingly.
+                        The Severity field MUST be set only when Status=False.
+                      maxLength: 32
                       type: string
                     status:
-                      description: Status of the condition, one of True, False, Unknown.
+                      description: status of the condition, one of True, False, Unknown.
                       type: string
                     type:
-                      description: Type of condition in CamelCase or in foo.example.com/CamelCase.
-                        Many .condition.type values are consistent across resources
-                        like Available, but because arbitrary conditions can be useful
-                        (see .node.status.conditions), the ability to deconflict is
-                        important.
+                      description: |-
+                        type of condition in CamelCase or in foo.example.com/CamelCase.
+                        Many .condition.type values are consistent across resources like Available, but because arbitrary conditions
+                        can be useful (see .node.status.conditions), the ability to deconflict is important.
+                      maxLength: 256
+                      minLength: 1
                       type: string
                   required:
                   - lastTransitionTime
