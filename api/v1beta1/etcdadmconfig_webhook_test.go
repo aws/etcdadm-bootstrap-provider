@@ -21,76 +21,48 @@ import (
 	"testing"
 
 	"github.com/onsi/gomega"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
-func TestEtcdadmConfigDefaultCastFail(t *testing.T) {
+func TestEtcdadmConfigDefault(t *testing.T) {
 	g := gomega.NewWithT(t)
 
-	// Create a different type that will cause the cast to fail
-	wrongType := &runtime.Unknown{}
-
-	// Create the config object that implements CustomDefaulter
 	config := &EtcdadmConfig{}
+	defaulter := &EtcdadmConfigDefaulter{}
 
-	// Call Default with the wrong type
-	err := config.Default(context.TODO(), wrongType)
-
-	// Verify that an error is returned
-	g.Expect(err).To(gomega.HaveOccurred())
-	g.Expect(err.Error()).To(gomega.ContainSubstring("expected an EtcdadmConfig"))
+	err := defaulter.Default(context.TODO(), config)
+	g.Expect(err).NotTo(gomega.HaveOccurred())
 }
 
-func TestEtcdadmConfigValidateCreateCastFail(t *testing.T) {
+func TestEtcdadmConfigValidateCreate(t *testing.T) {
 	g := gomega.NewWithT(t)
 
-	// Create a different type that will cause the cast to fail
-	wrongType := &runtime.Unknown{}
-
-	// Create the config object that implements CustomValidator
 	config := &EtcdadmConfig{}
+	validator := &EtcdadmConfigValidator{}
 
-	// Call ValidateCreate with the wrong type
-	warnings, err := config.ValidateCreate(context.TODO(), wrongType)
-
-	// Verify that an error is returned
+	warnings, err := validator.ValidateCreate(context.TODO(), config)
 	g.Expect(warnings).To(gomega.BeNil())
-	g.Expect(err).To(gomega.HaveOccurred())
-	g.Expect(err.Error()).To(gomega.ContainSubstring("expected an EtcdadmConfig"))
+	g.Expect(err).NotTo(gomega.HaveOccurred())
 }
 
-func TestEtcdadmConfigValidateUpdateCastFail(t *testing.T) {
+func TestEtcdadmConfigValidateUpdate(t *testing.T) {
 	g := gomega.NewWithT(t)
 
-	// Create a different type that will cause the cast to fail
-	wrongType := &runtime.Unknown{}
+	oldConfig := &EtcdadmConfig{}
+	newConfig := &EtcdadmConfig{}
+	validator := &EtcdadmConfigValidator{}
 
-	// Create the config object that implements CustomValidator
-	config := &EtcdadmConfig{}
-
-	// Call ValidateUpdate with the wrong type
-	warnings, err := config.ValidateUpdate(context.TODO(), &EtcdadmConfig{}, wrongType)
-
-	// Verify that an error is returned
+	warnings, err := validator.ValidateUpdate(context.TODO(), oldConfig, newConfig)
 	g.Expect(warnings).To(gomega.BeNil())
-	g.Expect(err).To(gomega.HaveOccurred())
-	g.Expect(err.Error()).To(gomega.ContainSubstring("expected an EtcdadmConfig"))
+	g.Expect(err).NotTo(gomega.HaveOccurred())
 }
 
-func TestEtcdadmConfigValidateDeleteCastFail(t *testing.T) {
+func TestEtcdadmConfigValidateDelete(t *testing.T) {
 	g := gomega.NewWithT(t)
 
-	// Create a different type that will cause the cast to fail
-	wrongType := &runtime.Unknown{}
-
-	// Create the config object that implements CustomValidator
 	config := &EtcdadmConfig{}
+	validator := &EtcdadmConfigValidator{}
 
-	// Call ValidateDelete with the wrong type
-	warnings, err := config.ValidateDelete(context.TODO(), wrongType)
-
-	// Verify that an error is returned
+	warnings, err := validator.ValidateDelete(context.TODO(), config)
 	g.Expect(warnings).To(gomega.BeNil())
-	g.Expect(err).To(gomega.HaveOccurred())
-	g.Expect(err.Error()).To(gomega.ContainSubstring("expected an EtcdadmConfig"))
+	g.Expect(err).NotTo(gomega.HaveOccurred())
 }
