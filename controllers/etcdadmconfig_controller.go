@@ -248,6 +248,10 @@ func (r *EtcdadmConfigReconciler) initializeEtcd(ctx context.Context, scope *Sco
 	if scope.Config.Spec.RegistryMirror != nil {
 		username, password, err := r.resolveRegistryCredentials(ctx, scope.Config)
 		if err != nil {
+			if apierrors.IsNotFound(errors.Cause(err)) {
+				log.Info("Registry credentials secret not found yet, requeueing")
+				return ctrl.Result{RequeueAfter: 10 * time.Second}, nil
+			}
 			log.Info("Cannot find secret for registry credentials, proceeding without registry credentials")
 		} else {
 			initInput.RegistryMirrorCredentials.Username = string(username)
@@ -333,6 +337,10 @@ func (r *EtcdadmConfigReconciler) joinEtcd(ctx context.Context, scope *Scope) (_
 	if scope.Config.Spec.RegistryMirror != nil {
 		username, password, err := r.resolveRegistryCredentials(ctx, scope.Config)
 		if err != nil {
+			if apierrors.IsNotFound(errors.Cause(err)) {
+				log.Info("Registry credentials secret not found yet, requeueing")
+				return ctrl.Result{RequeueAfter: 10 * time.Second}, nil
+			}
 			log.Info("Cannot find secret for registry credentials, proceeding without registry credentials")
 		} else {
 			joinInput.RegistryMirrorCredentials.Username = string(username)
