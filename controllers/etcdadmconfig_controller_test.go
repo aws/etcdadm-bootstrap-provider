@@ -778,6 +778,162 @@ func newEtcdInitSecret(cluster *clusterv1.Cluster) *corev1.Secret {
 	}
 }
 
+// initializeEtcd should requeue when registry mirror is configured but credentials secret doesn't exist yet
+func TestEtcdadmConfigReconciler_InitializeEtcd_RequeueWhenRegistryCredentialsSecretMissing(t *testing.T) {
+	g := NewWithT(t)
+
+	cluster := newCluster("external-etcd-cluster")
+	machine := newMachine(cluster, "machine")
+	config := newEtcdadmConfig(machine, "etcdadmConfig", etcdbootstrapv1.Bottlerocket)
+	config.Spec.RegistryMirror = &etcdbootstrapv1.RegistryMirrorConfiguration{
+		Endpoint: "https://registry.example.com",
+	}
+
+	objects := []client.Object{
+		cluster,
+		machine,
+		config,
+		// intentionally NOT creating the registry-credentials secret
+	}
+	myclient := fake.NewClientBuilder().
+		WithScheme(setupScheme()).
+		WithObjects(objects...).
+		WithStatusSubresource(&etcdbootstrapv1.EtcdadmConfig{}).
+		Build()
+
+	k := &EtcdadmConfigReconciler{
+		Log:             log.Log,
+		Client:          myclient,
+		EtcdadmInitLock: &etcdInitLocker{},
+	}
+	request := ctrl.Request{
+		NamespacedName: client.ObjectKey{
+			Namespace: "default",
+			Name:      "etcdadmConfig",
+		},
+	}
+	result, err := k.Reconcile(ctx, request)
+	g.Expect(err).NotTo(HaveOccurred())
+	g.Expect(result.RequeueAfter).To(Equal(10 * time.Second))
+}
+
+// initializeEtcd should include registry credentials in bootstrap data when secret exists
+func TestEtcdadmConfigReconciler_InitializeEtcd_IncludesRegistryCredentials(t *testing.T) {
+	g := NewWithT(t)
+
+	cluster := newCluster("external-etcd-cluster")
+	machine := newMachine(cluster, "machine")
+	config := newEtcdadmConfig(machine, "etcdadmConfig", etcdbootstrapv1.Bottlerocket)
+	config.Spec.RegistryMirror = &etcdbootstrapv1.RegistryMirrorConfiguration{
+		Endpoint: "https://registry.example.com",
+	}
+
+	registrySecret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "registry-credentials",
+			Namespace: "default",
+		},
+		Data: map[string][]byte{
+			"username": []byte("testuser"),
+			"password": []byte("testpass"),
+		},
+	}
+
+	objects := []client.Object{
+		cluster,
+		machine,
+		config,
+		registrySecret,
+	}
+	myclient := fake.NewClientBuilder().
+		WithScheme(setupScheme()).
+		WithObjects(objects...).
+		WithStatusSubresource(&etcdbootstrapv1.EtcdadmConfig{}).
+		Build()
+
+	k := &EtcdadmConfigReconciler{
+		Log:             log.Log,
+		Client:          myclient,
+		EtcdadmInitLock: &etcdInitLocker{},
+	}
+	request := ctrl.Request{
+		NamespacedName: client.ObjectKey{
+			Namespace: "default",
+			Name:      "etcdadmConfig",
+		},
+	}
+	result, err := k.Reconcile(ctx, request)
+	g.Expect(err).NotTo(HaveOccurred())
+	g.Expect(result.Requeue).To(BeFalse())
+	g.Expect(result.RequeueAfter).To(BeZero())
+
+	configKey := client.ObjectKeyFromObject(config)
+	g.Expect(myclient.Get(context.TODO(), configKey, config)).To(Succeed())
+	c := v1beta1conditions.Get(config, etcdbootstrapv1.DataSecretAvailableCondition)
+	g.Expect(c).ToNot(BeNil())
+	g.Expect(c.Status).To(Equal(corev1.ConditionTrue))
+
+	bootstrapSecret := &corev1.Secret{}
+	err = myclient.Get(ctx, configKey, bootstrapSecret)
+	g.Expect(err).NotTo(HaveOccurred())
+	g.Expect(bootstrapSecret.Data).To(Not(BeNil()))
+	bootstrapData := string(bootstrapSecret.Data["value"])
+	g.Expect(bootstrapData).To(ContainSubstring("testuser"))
+	g.Expect(bootstrapData).To(ContainSubstring("testpass"))
+}
+
+// joinEtcd should requeue when registry mirror is configured but credentials secret doesn't exist yet
+func TestEtcdadmConfigReconciler_JoinEtcd_RequeueWhenRegistryCredentialsSecretMissing(t *testing.T) {
+	g := NewWithT(t)
+
+	cluster := newCluster("external-etcd-cluster")
+	cluster.Status.ManagedExternalEtcdInitialized = true
+	conditions.Set(cluster, metav1.Condition{
+		Type:   string(clusterv1.ManagedExternalEtcdClusterInitializedCondition),
+		Status: metav1.ConditionTrue,
+	})
+	etcdInitSecret := newEtcdInitSecret(cluster)
+
+	machine := newMachine(cluster, "machine")
+	config := newEtcdadmConfig(machine, "etcdadmConfig", etcdbootstrapv1.Bottlerocket)
+	config.Spec.RegistryMirror = &etcdbootstrapv1.RegistryMirrorConfiguration{
+		Endpoint: "https://registry.example.com",
+	}
+
+	etcdCACerts := etcdCACertKeyPair()
+	g.Expect(etcdCACerts.Generate()).To(Succeed())
+	etcdCASecret := etcdCACerts[0].AsSecret(client.ObjectKey{Namespace: cluster.Namespace, Name: cluster.Name}, *metav1.NewControllerRef(config, etcdbootstrapv1.GroupVersion.WithKind("EtcdadmConfig")))
+
+	objects := []client.Object{
+		cluster,
+		machine,
+		etcdInitSecret,
+		etcdCASecret,
+		config,
+		// intentionally NOT creating the registry-credentials secret
+	}
+	myclient := fake.NewClientBuilder().
+		WithScheme(setupScheme()).
+		WithObjects(objects...).
+		WithStatusSubresource(&etcdbootstrapv1.EtcdadmConfig{}).
+		Build()
+
+	k := &EtcdadmConfigReconciler{
+		Log:             log.Log,
+		Client:          myclient,
+		EtcdadmInitLock: &etcdInitLocker{},
+	}
+	request := ctrl.Request{
+		NamespacedName: client.ObjectKey{
+			Namespace: "default",
+			Name:      "etcdadmConfig",
+		},
+	}
+	result, err := k.Reconcile(ctx, request)
+	g.Expect(err).NotTo(HaveOccurred())
+	g.Expect(result.RequeueAfter).To(Equal(10 * time.Second))
+}
+
 type etcdInitLocker struct {
 	locked bool
 }

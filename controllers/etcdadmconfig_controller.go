@@ -207,7 +207,7 @@ func (r *EtcdadmConfigReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		return res, err
 	}
 
-	return ctrl.Result{}, nil
+	return res, nil
 }
 
 func (r *EtcdadmConfigReconciler) initializeEtcd(ctx context.Context, scope *Scope) (_ ctrl.Result, rerr error) {
