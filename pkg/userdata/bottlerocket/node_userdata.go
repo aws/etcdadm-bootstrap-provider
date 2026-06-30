@@ -81,7 +81,7 @@ registry = "public.ecr.aws"
 username = "{{.RegistryMirrorUsername}}"
 password = "{{.RegistryMirrorPassword}}"
 [[settings.container-registry.credentials]]
-registry = "{{.RegistryMirrorEndpoint}}"
+registry = "{{.RegistryMirrorCredentialHost}}"
 username = "{{.RegistryMirrorUsername}}"
 password = "{{.RegistryMirrorPassword}}"
 {{- end -}}
@@ -157,20 +157,21 @@ trusted = true
 )
 
 type bottlerocketSettingsInput struct {
-	PauseContainerSource   string
-	HTTPSProxyEndpoint     string
-	NoProxyEndpoints       []string
-	RegistryMirrorEndpoint string
-	RegistryMirrorCACert   string
-	RegistryMirrorUsername string
-	RegistryMirrorPassword string
-	Hostname               string
-	HostContainers         []etcdbootstrapv1.BottlerocketHostContainer
-	BootstrapContainers    []etcdbootstrapv1.BottlerocketBootstrapContainer
-	NTPServers             []string
-	SysctlSettings         string
-	BootKernel             string
-	CertBundles            []bootstrapv1.CertBundle
+	PauseContainerSource       string
+	HTTPSProxyEndpoint         string
+	NoProxyEndpoints           []string
+	RegistryMirrorEndpoint     string
+	RegistryMirrorCredentialHost string
+	RegistryMirrorCACert       string
+	RegistryMirrorUsername     string
+	RegistryMirrorPassword     string
+	Hostname                   string
+	HostContainers             []etcdbootstrapv1.BottlerocketHostContainer
+	BootstrapContainers        []etcdbootstrapv1.BottlerocketBootstrapContainer
+	NTPServers                 []string
+	SysctlSettings             string
+	BootKernel                 string
+	CertBundles                []bootstrapv1.CertBundle
 }
 
 // generateBottlerocketNodeUserData returns the userdata for the host bottlerocket in toml format
@@ -227,6 +228,7 @@ func generateBottlerocketNodeUserData(kubeadmBootstrapContainerUserData []byte, 
 
 	if config.RegistryMirror != nil {
 		bottlerocketInput.RegistryMirrorEndpoint = config.RegistryMirror.Endpoint
+		bottlerocketInput.RegistryMirrorCredentialHost = registryHost(config.RegistryMirror.Endpoint)
 		if config.RegistryMirror.CACert != "" {
 			bottlerocketInput.RegistryMirrorCACert = base64.StdEncoding.EncodeToString([]byte(config.RegistryMirror.CACert))
 		}
@@ -318,6 +320,16 @@ func generateAdminContainerUserData(kind string, tpl string, data interface{}) (
 		return nil, errors.Wrapf(err, "failed to generate %s template", kind)
 	}
 	return out.Bytes(), nil
+}
+
+// registryHost extracts the host:port portion from an endpoint that may contain
+// a path component (e.g. "192.168.1.1:443/v2" -> "192.168.1.1:443").
+// Bottlerocket matches credentials by host:port only.
+func registryHost(endpoint string) string {
+	if idx := strings.Index(endpoint, "/"); idx != -1 {
+		return endpoint[:idx]
+	}
+	return endpoint
 }
 
 func generateNodeUserData(kind string, tpl string, data interface{}) ([]byte, error) {
