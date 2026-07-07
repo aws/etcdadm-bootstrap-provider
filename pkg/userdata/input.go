@@ -54,8 +54,10 @@ type EtcdadmArgs struct {
 }
 
 type RegistryMirrorCredentials struct {
-	Username string
-	Password string
+	Username                       string
+	Password                       string
+	RegistryMirrorEndpoint         string
+	RegistryMirrorCredentialEncoded string
 }
 
 func (args *EtcdadmArgs) SystemdFlags() []string {

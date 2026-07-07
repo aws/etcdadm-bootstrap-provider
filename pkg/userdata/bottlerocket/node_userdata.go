@@ -86,6 +86,20 @@ username = "{{.RegistryMirrorUsername}}"
 password = "{{.RegistryMirrorPassword}}"
 {{- end -}}
 `
+	registryMirrorHostsTomlTemplate = `{{ define "registryMirrorHostsTomlSettings" -}}
+-   path: /etc/containerd/certs.d/public.ecr.aws/hosts.toml
+    owner: root:root
+    permissions: '0644'
+    content: |
+      server = "https://public.ecr.aws"
+
+      [host."https://{{.RegistryMirrorEndpoint}}"]
+        capabilities = ["pull", "resolve"]
+
+      [host."https://{{.RegistryMirrorEndpoint}}".header]
+        authorization = "Basic {{.RegistryMirrorCredentialEncoded}}"
+{{- end -}}
+`
 	ntpTemplate = `{{ define "ntpSettings" -}}
 [settings.ntp]
 time-servers = [{{stringsJoin .NTPServers ", " }}]
@@ -163,9 +177,10 @@ type bottlerocketSettingsInput struct {
 	RegistryMirrorEndpoint       string
 	RegistryMirrorCredentialHost string
 	RegistryMirrorCACert         string
-	RegistryMirrorUsername       string
-	RegistryMirrorPassword       string
-	Hostname                     string
+	RegistryMirrorUsername          string
+	RegistryMirrorPassword          string
+	RegistryMirrorCredentialEncoded string
+	Hostname                        string
 	HostContainers               []etcdbootstrapv1.BottlerocketHostContainer
 	BootstrapContainers          []etcdbootstrapv1.BottlerocketBootstrapContainer
 	NTPServers                   []string
@@ -234,6 +249,10 @@ func generateBottlerocketNodeUserData(kubeadmBootstrapContainerUserData []byte, 
 		}
 		bottlerocketInput.RegistryMirrorUsername = registryMirrorCredentials.Username
 		bottlerocketInput.RegistryMirrorPassword = registryMirrorCredentials.Password
+		if registryMirrorCredentials.Username != "" && registryMirrorCredentials.Password != "" {
+			bottlerocketInput.RegistryMirrorCredentialEncoded = base64.StdEncoding.EncodeToString(
+				[]byte(fmt.Sprintf("%s:%s", registryMirrorCredentials.Username, registryMirrorCredentials.Password)))
+		}
 	}
 
 	if config.NTP != nil && config.NTP.Enabled != nil && *config.NTP.Enabled {

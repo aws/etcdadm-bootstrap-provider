@@ -37,6 +37,9 @@ func generateBootstrapContainerUserData(kind string, tpl string, data interface{
 	if _, err := tm.Parse(filesTemplate); err != nil {
 		return nil, errors.Wrap(err, "failed to parse files template")
 	}
+	if _, err := tm.Parse(registryMirrorHostsTomlTemplate); err != nil {
+		return nil, errors.Wrap(err, "failed to parse registry mirror hosts.toml template")
+	}
 
 	t, err := tm.Parse(tpl)
 	if err != nil {
