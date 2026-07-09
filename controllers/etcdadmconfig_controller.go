@@ -18,8 +18,10 @@ package controllers
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"k8s.io/apimachinery/pkg/types"
@@ -246,12 +248,15 @@ func (r *EtcdadmConfigReconciler) initializeEtcd(ctx context.Context, scope *Sco
 
 	// grab user pass for registry mirror
 	if scope.Config.Spec.RegistryMirror != nil {
+		initInput.RegistryMirrorCredentials.RegistryMirrorEndpoint = stripEndpointPath(scope.Config.Spec.RegistryMirror.Endpoint)
 		username, password, err := r.resolveRegistryCredentials(ctx, scope.Config)
 		if err != nil {
 			log.Info("Cannot find secret for registry credentials, proceeding without registry credentials")
 		} else {
 			initInput.RegistryMirrorCredentials.Username = string(username)
 			initInput.RegistryMirrorCredentials.Password = string(password)
+			initInput.RegistryMirrorCredentials.RegistryMirrorCredentialEncoded = base64.StdEncoding.EncodeToString(
+				[]byte(fmt.Sprintf("%s:%s", username, password)))
 		}
 	}
 
@@ -331,12 +336,15 @@ func (r *EtcdadmConfigReconciler) joinEtcd(ctx context.Context, scope *Scope) (_
 
 	// grab user pass for registry mirror
 	if scope.Config.Spec.RegistryMirror != nil {
+		joinInput.RegistryMirrorCredentials.RegistryMirrorEndpoint = stripEndpointPath(scope.Config.Spec.RegistryMirror.Endpoint)
 		username, password, err := r.resolveRegistryCredentials(ctx, scope.Config)
 		if err != nil {
 			log.Info("Cannot find secret for registry credentials, proceeding without registry credentials")
 		} else {
 			joinInput.RegistryMirrorCredentials.Username = string(username)
 			joinInput.RegistryMirrorCredentials.Password = string(password)
+			joinInput.RegistryMirrorCredentials.RegistryMirrorCredentialEncoded = base64.StdEncoding.EncodeToString(
+				[]byte(fmt.Sprintf("%s:%s", username, password)))
 		}
 	}
 
@@ -426,6 +434,14 @@ func (r *EtcdadmConfigReconciler) storeBootstrapData(ctx context.Context, config
 	config.Status.Ready = true
 	v1beta1conditions.MarkTrue(config, bootstrapv1.DataSecretAvailableCondition)
 	return nil
+}
+
+// stripEndpointPath extracts the host:port from an endpoint that may contain a path (e.g. "192.168.1.1:443/v2" -> "192.168.1.1:443").
+func stripEndpointPath(endpoint string) string {
+	if idx := strings.Index(endpoint, "/"); idx != -1 {
+		return endpoint[:idx]
+	}
+	return endpoint
 }
 
 func (r *EtcdadmConfigReconciler) resolveRegistryCredentials(ctx context.Context, config *etcdbootstrapv1.EtcdadmConfig) ([]byte, []byte, error) {

@@ -81,9 +81,23 @@ registry = "public.ecr.aws"
 username = "{{.RegistryMirrorUsername}}"
 password = "{{.RegistryMirrorPassword}}"
 [[settings.container-registry.credentials]]
-registry = "{{.RegistryMirrorEndpoint}}"
+registry = "{{.RegistryMirrorCredentialHost}}"
 username = "{{.RegistryMirrorUsername}}"
 password = "{{.RegistryMirrorPassword}}"
+{{- end -}}
+`
+	registryMirrorHostsTomlTemplate = `{{ define "registryMirrorHostsTomlSettings" -}}
+-   path: /etc/containerd/certs.d/public.ecr.aws/hosts.toml
+    owner: root:root
+    permissions: '0644'
+    content: |
+      server = "https://public.ecr.aws"
+
+      [host."https://{{.RegistryMirrorEndpoint}}"]
+        capabilities = ["pull", "resolve"]
+
+      [host."https://{{.RegistryMirrorEndpoint}}".header]
+        authorization = "Basic {{.RegistryMirrorCredentialEncoded}}"
 {{- end -}}
 `
 	ntpTemplate = `{{ define "ntpSettings" -}}
@@ -157,20 +171,22 @@ trusted = true
 )
 
 type bottlerocketSettingsInput struct {
-	PauseContainerSource   string
-	HTTPSProxyEndpoint     string
-	NoProxyEndpoints       []string
-	RegistryMirrorEndpoint string
-	RegistryMirrorCACert   string
-	RegistryMirrorUsername string
-	RegistryMirrorPassword string
-	Hostname               string
-	HostContainers         []etcdbootstrapv1.BottlerocketHostContainer
-	BootstrapContainers    []etcdbootstrapv1.BottlerocketBootstrapContainer
-	NTPServers             []string
-	SysctlSettings         string
-	BootKernel             string
-	CertBundles            []bootstrapv1.CertBundle
+	PauseContainerSource         string
+	HTTPSProxyEndpoint           string
+	NoProxyEndpoints             []string
+	RegistryMirrorEndpoint       string
+	RegistryMirrorCredentialHost string
+	RegistryMirrorCACert         string
+	RegistryMirrorUsername          string
+	RegistryMirrorPassword          string
+	RegistryMirrorCredentialEncoded string
+	Hostname                        string
+	HostContainers               []etcdbootstrapv1.BottlerocketHostContainer
+	BootstrapContainers          []etcdbootstrapv1.BottlerocketBootstrapContainer
+	NTPServers                   []string
+	SysctlSettings               string
+	BootKernel                   string
+	CertBundles                  []bootstrapv1.CertBundle
 }
 
 // generateBottlerocketNodeUserData returns the userdata for the host bottlerocket in toml format
@@ -226,12 +242,17 @@ func generateBottlerocketNodeUserData(kubeadmBootstrapContainerUserData []byte, 
 	}
 
 	if config.RegistryMirror != nil {
-		bottlerocketInput.RegistryMirrorEndpoint = config.RegistryMirror.Endpoint
+		bottlerocketInput.RegistryMirrorEndpoint = registryHost(config.RegistryMirror.Endpoint)
+		bottlerocketInput.RegistryMirrorCredentialHost = registryHostNoPort(config.RegistryMirror.Endpoint)
 		if config.RegistryMirror.CACert != "" {
 			bottlerocketInput.RegistryMirrorCACert = base64.StdEncoding.EncodeToString([]byte(config.RegistryMirror.CACert))
 		}
 		bottlerocketInput.RegistryMirrorUsername = registryMirrorCredentials.Username
 		bottlerocketInput.RegistryMirrorPassword = registryMirrorCredentials.Password
+		if registryMirrorCredentials.Username != "" && registryMirrorCredentials.Password != "" {
+			bottlerocketInput.RegistryMirrorCredentialEncoded = base64.StdEncoding.EncodeToString(
+				[]byte(fmt.Sprintf("%s:%s", registryMirrorCredentials.Username, registryMirrorCredentials.Password)))
+		}
 	}
 
 	if config.NTP != nil && config.NTP.Enabled != nil && *config.NTP.Enabled {
@@ -318,6 +339,27 @@ func generateAdminContainerUserData(kind string, tpl string, data interface{}) (
 		return nil, errors.Wrapf(err, "failed to generate %s template", kind)
 	}
 	return out.Bytes(), nil
+}
+
+// registryHost extracts the host:port portion from an endpoint that may contain
+// a path component (e.g. "192.168.1.1:443/v2" -> "192.168.1.1:443").
+func registryHost(endpoint string) string {
+	if idx := strings.Index(endpoint, "/"); idx != -1 {
+		return endpoint[:idx]
+	}
+	return endpoint
+}
+
+// registryHostNoPort extracts just the hostname from an endpoint, stripping
+// both path and port (e.g. "192.168.1.1:443/v2" -> "192.168.1.1").
+// Bottlerocket generates containerd credential directories without the port,
+// so the credentials registry field must match.
+func registryHostNoPort(endpoint string) string {
+	host := registryHost(endpoint)
+	if idx := strings.LastIndex(host, ":"); idx != -1 {
+		return host[:idx]
+	}
+	return host
 }
 
 func generateNodeUserData(kind string, tpl string, data interface{}) ([]byte, error) {
