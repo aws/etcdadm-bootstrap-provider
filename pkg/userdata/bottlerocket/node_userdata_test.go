@@ -136,7 +136,7 @@ pod-infra-container-image = "pause-image"
 [settings.network]
 hostname = ""
 [settings.container-registry.mirrors]
-"public.ecr.aws" = ["https://registry-endpoint"]
+"public.ecr.aws" = ["https://registry-endpoint:443"]
 [settings.pki.registry-mirror-ca]
 data = "Y2FjZXJ0"
 trusted=true
@@ -437,7 +437,7 @@ func TestGenerateBottlerocketNodeUserData(t *testing.T) {
 					PauseImage:     "pause-image",
 				},
 				RegistryMirror: &v1beta1.RegistryMirrorConfiguration{
-					Endpoint: "registry-endpoint",
+					Endpoint: "registry-endpoint:443/v2",
 					CACert:   "cacert",
 				},
 			},
