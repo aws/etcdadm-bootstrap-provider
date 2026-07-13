@@ -228,7 +228,7 @@ func generateBottlerocketNodeUserData(kubeadmBootstrapContainerUserData []byte, 
 
 	if config.RegistryMirror != nil {
 		bottlerocketInput.RegistryMirrorEndpoint = registryHost(config.RegistryMirror.Endpoint)
-		bottlerocketInput.RegistryMirrorCredentialHost = registryHostNoPort(config.RegistryMirror.Endpoint)
+		bottlerocketInput.RegistryMirrorCredentialHost = registryHost(config.RegistryMirror.Endpoint)
 		if config.RegistryMirror.CACert != "" {
 			bottlerocketInput.RegistryMirrorCACert = base64.StdEncoding.EncodeToString([]byte(config.RegistryMirror.CACert))
 		}
