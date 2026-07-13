@@ -145,7 +145,7 @@ registry = "public.ecr.aws"
 username = "username"
 password = "password"
 [[settings.container-registry.credentials]]
-registry = "registry-endpoint"
+registry = "registry-endpoint:443"
 username = "username"
 password = "password"`
 
