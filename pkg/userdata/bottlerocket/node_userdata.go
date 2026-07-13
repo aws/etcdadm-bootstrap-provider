@@ -331,17 +331,6 @@ func registryHost(endpoint string) string {
 	return endpoint
 }
 
-// registryHostNoPort extracts just the hostname from an endpoint, stripping
-// both path and port (e.g. "192.168.1.1:443/v2" -> "192.168.1.1").
-// Bottlerocket generates containerd credential directories without the port,
-// so the credentials registry field must match.
-func registryHostNoPort(endpoint string) string {
-	host := registryHost(endpoint)
-	if idx := strings.LastIndex(host, ":"); idx != -1 {
-		return host[:idx]
-	}
-	return host
-}
 
 func generateNodeUserData(kind string, tpl string, data interface{}) ([]byte, error) {
 	tm := template.New(kind).Funcs(template.FuncMap{"stringsJoin": strings.Join})
